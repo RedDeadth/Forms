@@ -1,3 +1,5 @@
+export const prerender = false;
+
 export const GET = ({ cookies, redirect }) => {
     // Elimina ambas cookies
     cookies.delete('user_name', { path: '/' });

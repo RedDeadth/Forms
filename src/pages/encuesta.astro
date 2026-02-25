@@ -11,6 +11,7 @@ const userName = Astro.cookies.get('user_name')?.value;
 ---
 
 <Layout>
+<div class="grid-bg min-h-screen">
 	<main class="max-w-4xl mx-auto py-10 px-6">
         <div class="flex justify-between items-center mb-10">
 		    <h1 class="text-3xl font-extrabold text-blue-700 tracking-tight">Encuesta sobre la vivienda</h1>
@@ -305,6 +306,7 @@ const userName = Astro.cookies.get('user_name')?.value;
 			</div>
 		</form>
 	</main>
+</div>
 </Layout>
 
 <script>
@@ -440,5 +442,19 @@ const userName = Astro.cookies.get('user_name')?.value;
 	}
 	.accordion.accordion-lg.accordion-open {
 		max-height: 800px;
+	}
+
+	/* Fondo cuadriculado animado en diagonal */
+	.grid-bg {
+		background-color: #f8fafc;
+		background-image:
+			linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+		background-size: 24px 24px;
+		animation: gridScroll 4s linear infinite;
+	}
+	@keyframes gridScroll {
+		0% { background-position: 0 0; }
+		100% { background-position: -24px -24px; }
 	}
 </style>

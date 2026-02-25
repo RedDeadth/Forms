@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import { pool } from '../../db.js';
 
 export const POST = async ({ request, redirect }) => {

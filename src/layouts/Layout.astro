@@ -10,7 +10,22 @@ import '../styles/global.css';
 		<meta name="generator" content={Astro.generator} />
 		<title>Evaluación de KPIs</title>
 	</head>
-	<body class="bg-black-100 text-gray-800 antialiased min-h-screen">
+	<body class="grid-bg text-gray-800 antialiased min-h-screen">
 		<slot />
 	</body>
 </html>
+
+<style is:global>
+	.grid-bg {
+		background-color: #f8fafc;
+		background-image:
+			linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+		background-size: 24px 24px;
+		animation: gridScroll 4s linear infinite;
+	}
+	@keyframes gridScroll {
+		0% { background-position: 0 0; }
+		100% { background-position: -24px -24px; }
+	}
+</style>
