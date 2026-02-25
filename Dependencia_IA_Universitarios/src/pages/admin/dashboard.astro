@@ -1,164 +1,212 @@
 ---
-export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
-import { pool } from '../../db.js';
-
-if (!Astro.cookies.has('admin_auth')) {
-    return Astro.redirect('/');
-}
-
-let stats = { total: 0, saludable: 0, funcional: 0, alta: 0, critica: 0, avgIDIA: 0, avgScore: 0 };
-let evaluaciones = [];
-
-try {
-    const [rows] = await pool.query('SELECT * FROM evaluaciones_ia ORDER BY created_at DESC LIMIT 50');
-    evaluaciones = rows;
-    stats.total = rows.length;
-    stats.saludable = rows.filter(r => r.nivel_dependencia === 'Uso saludable').length;
-    stats.funcional = rows.filter(r => r.nivel_dependencia === 'Dependencia funcional').length;
-    stats.alta = rows.filter(r => r.nivel_dependencia === 'Dependencia alta').length;
-    stats.critica = rows.filter(r => r.nivel_dependencia === 'Dependencia crítica').length;
-    stats.avgScore = rows.length ? Math.round(rows.reduce((a, r) => a + (r.score_total || 0), 0) / rows.length) : 0;
-    stats.avgIDIA = rows.length ? (rows.reduce((a, r) => a + parseFloat(r.idia_porcentaje || 0), 0) / rows.length).toFixed(1) : 0;
-} catch (e) {
-    console.error('Dashboard DB error:', e);
-}
-
-function getIdiaColor(porcentaje) {
-    if (porcentaje < 35) return 'text-green-600';
-    if (porcentaje <= 55) return 'text-blue-600';
-    if (porcentaje <= 75) return 'text-orange-600';
-    return 'text-red-600';
-}
 ---
 
 <Layout>
-	<main class="min-h-screen p-6" x-data="{ search: '', expandedRow: null }">
+	<main class="min-h-screen p-6" x-data="dashboardData()">
         
-        <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
-            <div>
-                <h1 class="text-3xl font-extrabold text-blue-700">Panel de Administrador</h1>
-                <p class="text-gray-500 mt-1">Resumen de Encuestas: Dependencia IA Universitarios</p>
-            </div>
-            <a href="/api/logout" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
-        </div>
-
-        <!-- Stats -->
-        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-7 gap-3 mb-8">
-            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                <p class="text-3xl font-black text-blue-600">{stats.total}</p>
-                <p class="text-xs text-gray-500 mt-1">Total</p>
-            </div>
-            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                <p class="text-3xl font-black text-indigo-500">{stats.avgScore}</p>
-                <p class="text-xs text-gray-500 mt-1">Puntaje Prom.</p>
-            </div>
-            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                <p class="text-3xl font-black text-indigo-700">{stats.avgIDIA}%</p>
-                <p class="text-xs text-gray-500 mt-1">IDIA Prom.</p>
-            </div>
-            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                <p class="text-3xl font-black text-green-600">{stats.saludable}</p>
-                <p class="text-xs text-gray-500 mt-1">Saludable</p>
-            </div>
-            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                <p class="text-3xl font-black text-yellow-600">{stats.funcional}</p>
-                <p class="text-xs text-gray-500 mt-1">Funcional</p>
-            </div>
-            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                <p class="text-3xl font-black text-orange-600">{stats.alta}</p>
-                <p class="text-xs text-gray-500 mt-1">Dep. Alta</p>
-            </div>
-            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                <p class="text-3xl font-black text-red-600">{stats.critica}</p>
-                <p class="text-xs text-gray-500 mt-1">Crítica</p>
+        <!-- Loading -->
+        <div x-show="loading" class="flex items-center justify-center min-h-[50vh]">
+            <div class="text-center">
+                <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-gray-500 font-medium">Cargando datos...</p>
             </div>
         </div>
 
-        <!-- Search -->
-        <div class="max-w-7xl mx-auto mb-6">
-            <input type="text" x-model="search" placeholder="Buscar por nombres, universidad, programa o país..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-blue-200 outline-none"/>
+        <!-- No Auth -->
+        <div x-show="!loading && !authorized" class="flex items-center justify-center min-h-[50vh]">
+            <div class="text-center bg-white p-10 rounded-3xl shadow-xl border">
+                <p class="text-xl font-bold text-red-600 mb-4">⚠️ No autorizado</p>
+                <p class="text-gray-500 mb-6">Debe iniciar sesión como administrador.</p>
+                <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition">Ir al inicio</a>
+            </div>
         </div>
 
-        <!-- Table -->
-        <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg border overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 border-b">
-                        <tr>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-600">#</th>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Nombres y Apellidos</th>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Universidad</th>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Programa</th>
-                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Semestre</th>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-600">País</th>
-                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Total</th>
-                            <th class="px-3 py-3 text-center font-semibold text-gray-600">IDIA</th>
-                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Nivel</th>
-                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Fecha</th>
-                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Detalle</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {evaluaciones.map((r, i) => {
-                            const lc = r.nivel_dependencia === 'Uso saludable' ? 'bg-green-100 text-green-700 border border-green-200' 
-                                : r.nivel_dependencia === 'Dependencia funcional' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                                : r.nivel_dependencia === 'Dependencia alta' ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                                : 'bg-red-100 text-red-700 border border-red-200';
-                            
-                            const idiaC = getIdiaColor(r.idia_porcentaje);
+        <!-- Dashboard Content -->
+        <div x-show="!loading && authorized" x-cloak>
+            <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-blue-700">Panel de Administrador</h1>
+                    <p class="text-gray-500 mt-1">Resumen de Encuestas: Dependencia IA Universitarios</p>
+                </div>
+                <a href="/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
+            </div>
 
-                            const searchStr = `${(r.nombres||'').toLowerCase()} ${(r.apellidos||'').toLowerCase()} ${(r.universidad||'').toLowerCase()} ${(r.programa_estudios||'').toLowerCase()} ${(r.pais||'').toLowerCase()}`;
-                            
-                            return (
-                                <>
-                                <tr class="border-b hover:bg-blue-50 transition cursor-pointer"
-                                    x-show={`'${searchStr}'.includes(search.toLowerCase()) || search===''`}
-                                    x-on:click={`expandedRow = expandedRow===${i} ? null : ${i}`}>
-                                    <td class="px-3 py-3 text-gray-400">{i + 1}</td>
-                                    <td class="px-3 py-3 font-medium text-gray-800">{(r.nombres || '') + ' ' + (r.apellidos || '-')}</td>
-                                    <td class="px-3 py-3 text-gray-600">{r.universidad || '-'}</td>
-                                    <td class="px-3 py-3 text-gray-600">{r.programa_estudios || '-'}</td>
-                                    <td class="px-3 py-3 text-center text-gray-600 font-medium">{r.semestre || '-'}</td>
-                                    <td class="px-3 py-3 text-gray-600">{r.pais || '-'}</td>
-                                    <td class="px-3 py-3 text-center font-bold text-gray-700">{r.score_total}</td>
-                                    <td class={`px-3 py-3 text-center font-bold ${idiaC}`}>{r.idia_porcentaje}%</td>
-                                    <td class="px-3 py-3 text-center"><span class={`px-2 py-1 rounded-lg text-xs font-bold ${lc}`}>{r.nivel_dependencia}</span></td>
-                                    <td class="px-3 py-3 text-gray-400 text-xs">{r.fecha || new Date(r.created_at).toLocaleDateString('es')}</td>
-                                    <td class="px-3 py-3 text-center text-blue-500">
-                                        <span x-text={`expandedRow===${i}?'▲':'▼'`}></span>
+            <!-- Stats -->
+            <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-7 gap-3 mb-8">
+                <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                    <p class="text-3xl font-black text-blue-600" x-text="stats.total"></p>
+                    <p class="text-xs text-gray-500 mt-1">Total</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                    <p class="text-3xl font-black text-indigo-500" x-text="stats.avgScore"></p>
+                    <p class="text-xs text-gray-500 mt-1">Puntaje Prom.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                    <p class="text-3xl font-black text-indigo-700" x-text="stats.avgIDIA+'%'"></p>
+                    <p class="text-xs text-gray-500 mt-1">IDIA Prom.</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                    <p class="text-3xl font-black text-green-600" x-text="stats.saludable"></p>
+                    <p class="text-xs text-gray-500 mt-1">Saludable</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                    <p class="text-3xl font-black text-yellow-600" x-text="stats.funcional"></p>
+                    <p class="text-xs text-gray-500 mt-1">Funcional</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                    <p class="text-3xl font-black text-orange-600" x-text="stats.alta"></p>
+                    <p class="text-xs text-gray-500 mt-1">Dep. Alta</p>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                    <p class="text-3xl font-black text-red-600" x-text="stats.critica"></p>
+                    <p class="text-xs text-gray-500 mt-1">Crítica</p>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="max-w-7xl mx-auto mb-6">
+                <input type="text" x-model="search" placeholder="Buscar por nombres, universidad, programa o país..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-blue-200 outline-none"/>
+            </div>
+
+            <!-- Table -->
+            <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600">#</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Nombres y Apellidos</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Universidad</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Programa</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Semestre</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600">País</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Total</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600">IDIA</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Nivel</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Fecha</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(r, i) in filteredEvaluaciones()" :key="i">
+                                <tr>
+                                    <td colspan="11" class="p-0">
+                                        <!-- Main Row -->
+                                        <div class="flex items-center border-b hover:bg-blue-50 transition cursor-pointer px-0"
+                                             @click="expandedRow = expandedRow===i ? null : i">
+                                            <div class="px-3 py-3 text-gray-400 w-[40px]" x-text="i+1"></div>
+                                            <div class="px-3 py-3 font-medium text-gray-800 flex-1 min-w-[150px]" x-text="(r.nombres||'')+' '+(r.apellidos||'-')"></div>
+                                            <div class="px-3 py-3 text-gray-600 flex-1 min-w-[120px]" x-text="r.universidad||'-'"></div>
+                                            <div class="px-3 py-3 text-gray-600 flex-1 min-w-[120px]" x-text="r.programa_estudios||'-'"></div>
+                                            <div class="px-3 py-3 text-center text-gray-600 font-medium w-[80px]" x-text="r.semestre||'-'"></div>
+                                            <div class="px-3 py-3 text-gray-600 w-[80px]" x-text="r.pais||'-'"></div>
+                                            <div class="px-3 py-3 text-center font-bold text-gray-700 w-[60px]" x-text="r.score_total"></div>
+                                            <div class="px-3 py-3 text-center font-bold w-[70px]" :class="getIdiaColor(r.idia_porcentaje)" x-text="r.idia_porcentaje+'%'"></div>
+                                            <div class="px-3 py-3 text-center w-[140px]">
+                                                <span class="px-2 py-1 rounded-lg text-xs font-bold" :class="getLevelClass(r.nivel_dependencia)" x-text="r.nivel_dependencia"></span>
+                                            </div>
+                                            <div class="px-3 py-3 text-gray-400 text-xs w-[90px]" x-text="r.created_at ? new Date(r.created_at).toLocaleDateString('es') : '-'"></div>
+                                            <div class="px-3 py-3 text-center text-blue-500 w-[50px]">
+                                                <span x-text="expandedRow===i?'▲':'▼'"></span>
+                                            </div>
+                                        </div>
+                                        <!-- Expanded Detail -->
+                                        <div x-show="expandedRow===i" x-transition class="bg-indigo-50/50 px-6 py-5 border-b">
+                                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Cognitiva</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_cognitiva+'/35'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sobreconfianza</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_sobreconfianza+'/35'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sustitución</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_sustitucion+'/35'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Compulsivo</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_compulsivo+'/28'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Ético</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_etico+'/28'"></p></div>
+                                            </div>
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Región / Prov.</p><p class="font-medium text-gray-700" x-text="(r.region||'-')+' / '+(r.provincia||'-')"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Correo</p><p class="font-medium text-gray-700" x-text="r.correo||'-'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">WhatsApp</p><p class="font-medium text-gray-700" x-text="r.whatsapp||'-'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Nivel IDIA</p><p class="font-medium text-gray-700" x-text="r.idia_nivel||'-'"></p></div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
-                                <tr x-show={`expandedRow===${i}`} x-transition class="border-b bg-indigo-50/50">
-                                    <td colspan="11" class="px-6 py-5">
-                                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Cognitiva</p><p class="font-bold text-blue-900 text-lg">{r.score_cognitiva}/35</p></div>
-                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sobreconfianza</p><p class="font-bold text-blue-900 text-lg">{r.score_sobreconfianza}/35</p></div>
-                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sustitución</p><p class="font-bold text-blue-900 text-lg">{r.score_sustitucion}/35</p></div>
-                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Compulsivo</p><p class="font-bold text-blue-900 text-lg">{r.score_compulsivo}/28</p></div>
-                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Ético</p><p class="font-bold text-blue-900 text-lg">{r.score_etico}/28</p></div>
-                                        </div>
-                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
-                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Región / Prov.</p><p class="font-medium text-gray-700">{r.region || '-'} / {r.provincia || '-'}</p></div>
-                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Correo</p><p class="font-medium text-gray-700">{r.correo || '-'}</p></div>
-                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">WhatsApp</p><p class="font-medium text-gray-700">{r.whatsapp || '-'}</p></div>
-                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Nivel IDIA</p><p class="font-medium text-gray-700">{r.idia_nivel || '-'}</p></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                </>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <p x-show="evaluaciones.length === 0 && !loading" class="text-center py-10 text-gray-400">No hay evaluaciones registradas aún.</p>
             </div>
-            {evaluaciones.length === 0 && <p class="text-center py-10 text-gray-400">No hay evaluaciones registradas aún.</p>}
         </div>
 	</main>
 </Layout>
 
 <script>
 import Alpine from 'alpinejs';
+
+window.dashboardData = function() {
+    return {
+        loading: true,
+        authorized: false,
+        search: '',
+        expandedRow: null,
+        stats: { total: 0, saludable: 0, funcional: 0, alta: 0, critica: 0, avgScore: 0, avgIDIA: 0 },
+        evaluaciones: [],
+
+        async init() {
+            // Verificar cookie admin_auth del lado del cliente
+            if (!document.cookie.includes('admin_auth=true')) {
+                this.loading = false;
+                this.authorized = false;
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/get_evaluaciones.php');
+                if (res.status === 401) {
+                    this.authorized = false;
+                    this.loading = false;
+                    return;
+                }
+                const data = await res.json();
+                this.stats = data.stats;
+                this.evaluaciones = data.evaluaciones;
+                this.authorized = true;
+            } catch (e) {
+                console.error('Error cargando dashboard:', e);
+                this.authorized = false;
+            }
+            this.loading = false;
+        },
+
+        filteredEvaluaciones() {
+            if (!this.search) return this.evaluaciones;
+            const s = this.search.toLowerCase();
+            return this.evaluaciones.filter(r => {
+                const str = `${(r.nombres||'')} ${(r.apellidos||'')} ${(r.universidad||'')} ${(r.programa_estudios||'')} ${(r.pais||'')}`.toLowerCase();
+                return str.includes(s);
+            });
+        },
+
+        getIdiaColor(porcentaje) {
+            const p = parseFloat(porcentaje);
+            if (p < 35) return 'text-green-600';
+            if (p <= 55) return 'text-blue-600';
+            if (p <= 75) return 'text-orange-600';
+            return 'text-red-600';
+        },
+
+        getLevelClass(nivel) {
+            if (nivel === 'Uso saludable') return 'bg-green-100 text-green-700 border border-green-200';
+            if (nivel === 'Dependencia funcional') return 'bg-yellow-100 text-yellow-700 border border-yellow-200';
+            if (nivel === 'Dependencia alta') return 'bg-orange-100 text-orange-700 border border-orange-200';
+            return 'bg-red-100 text-red-700 border border-red-200';
+        }
+    };
+};
+
 window.Alpine = Alpine;
 Alpine.start();
 </script>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>

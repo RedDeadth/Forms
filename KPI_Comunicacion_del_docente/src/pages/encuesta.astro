@@ -1,12 +1,5 @@
 ---
-export const prerender = false;
 import Layout from '../layouts/Layout.astro';
-
-if (!Astro.cookies.has('user_name')) {
-    return Astro.redirect('/');
-}
-
-const userName = Astro.cookies.get('user_name')?.value;
 ---
 
 <Layout>
@@ -14,13 +7,13 @@ const userName = Astro.cookies.get('user_name')?.value;
 		<div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
 			<h1 class="text-3xl font-extrabold text-emerald-700 tracking-tight text-center md:text-left">KPI Comunicación del Docente</h1>
 			<div class="flex gap-3 items-center">
-                <span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido {userName}</span>
-			    <a href="/api/logout" class="text-white bg-red-500 hover:bg-red-600 transition px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
+                <span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido</span>
+			    <a href="/api/logout.php" class="text-white bg-red-500 hover:bg-red-600 transition px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
             </div>
 		</div>
 
-		<form action="/api/submit" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 md:p-12 border border-gray-100 space-y-8" @submit="onSubmit">
-                <input type="hidden" name="encuestado_nombre" value={userName} />
+		<form action="/api/submit.php" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 md:p-12 border border-gray-100 space-y-8" @submit="onSubmit">
+                <input type="hidden" name="encuestado_nombre" :value="userName" />
                 <input type="hidden" name="fecha" :value="getCurrentDate()" />
                 <input type="hidden" name="score_total" :value="totalScore" />
                 <input type="hidden" name="nivel_docente" :value="nivelDocente" />

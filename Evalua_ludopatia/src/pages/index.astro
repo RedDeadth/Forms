@@ -1,12 +1,5 @@
 ---
-export const prerender = false;
 import Layout from '../layouts/Layout.astro';
-
-if (Astro.cookies.has('user_name')) return Astro.redirect('/encuesta');
-if (Astro.cookies.has('admin_auth')) return Astro.redirect('/admin/dashboard');
-
-const errorMsg = Astro.url.searchParams.get('error');
-const errorDetails = Astro.url.searchParams.get('details');
 ---
 
 <Layout>
@@ -18,12 +11,9 @@ const errorDetails = Astro.url.searchParams.get('details');
 				<p class="text-gray-600 mt-2 text-lg">Seleccione su rol para continuar</p>
 			</div>
 
-            {errorMsg && (
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl relative mb-6 text-center shadow-sm text-sm font-bold" role="alert">
-                    <span class="block sm:inline">{errorMsg === 'credenciales' ? 'Contraseña incorrecta' : 'Error al procesar solicitud'}</span>
-                    {errorDetails && <p class="text-xs font-normal mt-2 text-red-500 break-words">{errorDetails}</p>}
-                </div>
-            )}
+            <div id="error-msg" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl relative mb-6 text-center shadow-sm text-sm font-bold hidden" role="alert">
+                <span class="block sm:inline" id="error-text"></span>
+            </div>
 
             <div class="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 transition-all duration-300">
                 
@@ -46,7 +36,7 @@ const errorDetails = Astro.url.searchParams.get('details');
                 </div>
 
                 <!-- Formulario -->
-                <form action="/api/auth" method="POST" class="space-y-6"
+                <form action="/api/auth.php" method="POST" class="space-y-6"
                     x-ref="authForm"
                     @submit="$refs.typeField.value = currentRole">
                     
@@ -95,6 +85,15 @@ const errorDetails = Astro.url.searchParams.get('details');
 	if (!window.Alpine) {
         window.Alpine = Alpine;
 	    Alpine.start();
+    }
+
+    // Mostrar errores desde URL params
+    const params = new URLSearchParams(window.location.search);
+    const errorMsg = params.get('error');
+    if (errorMsg) {
+        const el = document.getElementById('error-msg');
+        const txt = document.getElementById('error-text');
+        if (el && txt) { el.classList.remove('hidden'); txt.textContent = errorMsg === 'credenciales' ? 'Contraseña incorrecta' : 'Error al procesar solicitud'; }
     }
 </script>
 

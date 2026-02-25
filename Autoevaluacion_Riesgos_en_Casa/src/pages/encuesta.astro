@@ -1,19 +1,16 @@
 ---
-export const prerender = false;
 import Layout from '../layouts/Layout.astro';
-if (!Astro.cookies.has('user_name')) { return Astro.redirect('/'); }
-const userName = Astro.cookies.get('user_name')?.value;
 ---
 <Layout>
 	<main class="max-w-4xl mx-auto py-10 px-6">
 		<div class="flex justify-between items-center mb-10">
 			<h1 class="text-3xl font-extrabold text-blue-700 tracking-tight">Encuesta sobre la vivienda</h1>
-			<span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido {userName}</span>
-			<a href="/api/logout" class="text-white bg-red-500 px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
+			<span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido</span>
+			<a href="/api/logout.php" class="text-white bg-red-500 px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
 		</div>
 		
-		<form id="inspection-form" action="/api/submit" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
-			<input type="hidden" name="inspector_nombre" value={userName} />
+		<form id="inspection-form" action="/api/submit.php" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
+			<input type="hidden" name="inspector_nombre" :value="userName" />
 
 			<!-- ===== SECTION 1: Registro ===== -->
 			<div class="mb-10 border-b pb-8">
