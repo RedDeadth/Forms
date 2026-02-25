@@ -6,17 +6,16 @@ export const POST = async ({ request, redirect }) => {
     try {
         const data = await request.formData();
         
-        // Section 1
+        // Section 1 - Registro
         const inspector_nombre = data.get('inspector_nombre');
         const tipo_vivienda = data.get('tipo_vivienda');
-        const pisos = data.get('pisos');
-        const area_construccion = data.get('area_construccion');
-        const sector = data.get('sector');
+        const plantas = data.get('plantas');
+        const zona_construccion = data.get('zona_construccion');
+        const fecha = data.get('fecha');
         const pais = data.get('pais');
         const region = data.get('region');
         const provincia = data.get('provincia');
         const grado_estudios = data.get('grado_estudios');
-        const zona_construccion = data.get('zona_construccion');
 
         // Section 2 - Scores
         const score_electrico = parseInt(data.get('score_electrico')) || 0;
@@ -32,12 +31,12 @@ export const POST = async ({ request, redirect }) => {
 
         const [result] = await pool.query(
             `INSERT INTO inspecciones 
-            (inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia, grado_estudios, zona_construccion,
+            (inspector_nombre, tipo_vivienda, plantas, zona_construccion, fecha, pais, region, provincia, grado_estudios,
              score_electrico, score_incendio, score_caidas, score_humedad, score_estructural, score_salud, score_infantil,
              score_total, nivel_riesgo, respuestas_json) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia, grado_estudios, zona_construccion,
+                inspector_nombre, tipo_vivienda, plantas, zona_construccion, fecha, pais, region, provincia, grado_estudios,
                 score_electrico, score_incendio, score_caidas, score_humedad, score_estructural, score_salud, score_infantil,
                 score_total, nivel_riesgo, respuestas_json
             ]

@@ -9,14 +9,15 @@ const userName = Astro.cookies.get('user_name')?.value;
 		<div class="flex justify-between items-center mb-10">
 			<h1 class="text-3xl font-extrabold text-blue-700 tracking-tight">Encuesta sobre la vivienda</h1>
 			<span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido {userName}</span>
+			<a href="/api/logout" class="text-white bg-red-500 px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
 		</div>
 		
 		<form id="inspection-form" action="/api/submit" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
 			<input type="hidden" name="inspector_nombre" value={userName} />
 
-			<!-- ===== SECTION 1: Usuario e Inmueble ===== -->
+			<!-- ===== SECTION 1: Registro ===== -->
 			<div class="mb-10 border-b pb-8">
-				<h2 class="section-title">1. Usuario e Inmueble</h2>
+				<h2 class="section-title">1. Registro</h2>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
 						<label class="field-label">1.1 Tipo de Vivienda</label>
@@ -27,28 +28,52 @@ const userName = Astro.cookies.get('user_name')?.value;
 								<svg class="cs-arrow" :class="openDd==='tipoVivienda'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
 							</button>
 							<div class="cs-list" :class="openDd==='tipoVivienda'?'cs-list-open':''">
-								<template x-for="o in [{v:'Propia'},{v:'Alquiler'},{v:'Invasión'},{v:'Familiar'},{v:'Anticresis'}]"><div class="cs-option" @click="sel('tipoVivienda',o.v,o.v)" x-text="o.v"></div></template>
+								<template x-for="o in [{v:'Propia'},{v:'Alquilada'},{v:'Otras'}]"><div class="cs-option" @click="sel('tipoVivienda',o.v,o.v)" x-text="o.v"></div></template>
 							</div>
 						</div>
 					</div>
 					<div>
-						<label class="field-label">1.2 Pisos</label>
-						<input type="hidden" name="pisos" x-model="pisos" />
+						<label class="field-label">1.2 Plantas</label>
+						<input type="hidden" name="plantas" x-model="plantas" />
 						<div class="relative">
-							<button type="button" @click="toggleDd('pisos')" class="cs-trigger" :class="openDd==='pisos'&&'cs-trigger-active'">
-								<span x-text="pisosLabel"></span>
-								<svg class="cs-arrow" :class="openDd==='pisos'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+							<button type="button" @click="toggleDd('plantas')" class="cs-trigger" :class="openDd==='plantas'&&'cs-trigger-active'">
+								<span x-text="plantasLabel" :class="!plantas&&'text-gray-400'"></span>
+								<svg class="cs-arrow" :class="openDd==='plantas'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
 							</button>
-							<div class="cs-list" :class="openDd==='pisos'?'cs-list-open':''">
-								<template x-for="o in [{v:'1'},{v:'2'},{v:'3'},{v:'4+',l:'4 o más'}]"><div class="cs-option" @click="sel('pisos',o.v,o.l||o.v)" x-text="o.l||o.v"></div></template>
+							<div class="cs-list" :class="openDd==='plantas'?'cs-list-open':''">
+								<template x-for="n in [1,2,3,4,5,6]"><div class="cs-option" @click="sel('plantas',String(n),String(n))" x-text="n"></div></template>
 							</div>
 						</div>
 					</div>
-					<div><label class="field-label">1.3 Área de construcción (m2)</label><input type="number" step="any" name="area_construccion" required class="cs-input"/></div>
-					<div><label class="field-label">1.4 Sector</label><input type="text" name="sector" class="cs-input"/></div>
-					<div><label class="field-label">1.5 País</label><input type="text" name="pais" required class="cs-input"/></div>
-					<div><label class="field-label">1.6 Región</label><input type="text" name="region" class="cs-input"/></div>
-					<div><label class="field-label">1.7 Provincia</label><input type="text" name="provincia" class="cs-input"/></div>
+					<div>
+						<label class="field-label">1.3 Zona de construcción</label>
+						<input type="hidden" name="zona_construccion" x-model="zonaConstruccion" />
+						<div class="relative">
+							<button type="button" @click="toggleDd('zonaConstruccion')" class="cs-trigger" :class="openDd==='zonaConstruccion'&&'cs-trigger-active'">
+								<span x-text="zonaConstruccionLabel" :class="!zonaConstruccion&&'text-gray-400'"></span>
+								<svg class="cs-arrow" :class="openDd==='zonaConstruccion'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+							</button>
+							<div class="cs-list" :class="openDd==='zonaConstruccion'?'cs-list-open':''">
+								<template x-for="o in [{v:'Urbana'},{v:'Rural'}]"><div class="cs-option" @click="sel('zonaConstruccion',o.v,o.v)" x-text="o.v"></div></template>
+							</div>
+						</div>
+					</div>
+					<div>
+						<label class="field-label">1.4 Fecha</label>
+						<input type="text" name="fecha" :value="new Date().toLocaleDateString('es-PE')" readonly class="cs-input bg-gray-50 text-gray-500 cursor-not-allowed"/>
+					</div>
+					<div>
+						<label class="field-label">1.5 País</label>
+						<input type="text" name="pais" x-model="pais" required class="cs-input" placeholder="Ej: Perú"/>
+					</div>
+					<div :class="pais.toLowerCase().trim()!=='perú'&&pais.toLowerCase().trim()!=='peru'?'opacity-50':''">
+						<label class="field-label">1.6 Región</label>
+						<input type="text" name="region" class="cs-input" :required="pais.toLowerCase().trim()==='perú'||pais.toLowerCase().trim()==='peru'"/>
+					</div>
+					<div :class="pais.toLowerCase().trim()!=='perú'&&pais.toLowerCase().trim()!=='peru'?'opacity-50':''">
+						<label class="field-label">1.7 Provincia</label>
+						<input type="text" name="provincia" class="cs-input" :required="pais.toLowerCase().trim()==='perú'||pais.toLowerCase().trim()==='peru'"/>
+					</div>
 					<div>
 						<label class="field-label">1.8 Grado de estudios concluida</label>
 						<input type="hidden" name="grado_estudios" x-model="gradoEstudios" />
@@ -59,19 +84,6 @@ const userName = Astro.cookies.get('user_name')?.value;
 							</button>
 							<div class="cs-list" :class="openDd==='gradoEstudios'?'cs-list-open':''">
 								<template x-for="o in [{v:'Inicial'},{v:'Primaria'},{v:'Superior técnica'},{v:'Superior universitaria'},{v:'Ninguna'}]"><div class="cs-option" @click="sel('gradoEstudios',o.v,o.v)" x-text="o.v"></div></template>
-							</div>
-						</div>
-					</div>
-					<div>
-						<label class="field-label">1.9 Zona de construcción</label>
-						<input type="hidden" name="zona_construccion" x-model="zonaConstruccion" />
-						<div class="relative">
-							<button type="button" @click="toggleDd('zonaConstruccion')" class="cs-trigger" :class="openDd==='zonaConstruccion'&&'cs-trigger-active'">
-								<span x-text="zonaConstruccionLabel" :class="!zonaConstruccion&&'text-gray-400'"></span>
-								<svg class="cs-arrow" :class="openDd==='zonaConstruccion'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-							</button>
-							<div class="cs-list" :class="openDd==='zonaConstruccion'?'cs-list-open':''">
-								<template x-for="o in [{v:'Urbana'},{v:'Rural'}]"><div class="cs-option" @click="sel('zonaConstruccion',o.v,o.v)" x-text="o.v"></div></template>
 							</div>
 						</div>
 					</div>
@@ -95,7 +107,7 @@ const userName = Astro.cookies.get('user_name')?.value;
 									<p class="flex-1 text-sm font-medium text-gray-700" x-text="'2.'+(si+1)+'.'+(qi+1)+' '+q"></p>
 									<div class="relative shrink-0 w-52">
 										<button type="button" @click="openRiskDd = openRiskDd===si+'_'+qi ? null : si+'_'+qi" class="cs-trigger text-sm" :class="openRiskDd===si+'_'+qi&&'cs-trigger-active'">
-											<span class="truncate" x-text="riskOptions[answers[si][qi]].l" :class="riskLabelColors[answers[si][qi]]"></span>
+											<span class="truncate" x-text="answers[si][qi]<0?'Seleccione...':riskOptions[answers[si][qi]].l" :class="answers[si][qi]<0?'text-gray-400':riskLabelColors[answers[si][qi]]"></span>
 											<svg class="cs-arrow" :class="openRiskDd===si+'_'+qi&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
 										</button>
 										<div class="cs-list" :class="openRiskDd===si+'_'+qi?'cs-list-open':''">
@@ -157,9 +169,10 @@ window.formData = function() {
 	return {
 		// Section 1
 		tipoVivienda:'', tipoViviendaLabel:'Seleccione...',
-		pisos:'1', pisosLabel:'1',
+		plantas:'', plantasLabel:'Seleccione...',
 		gradoEstudios:'', gradoEstudiosLabel:'Seleccione...',
 		zonaConstruccion:'', zonaConstruccionLabel:'Seleccione...',
+		pais:'',
 		openDd: null,
 		openRiskDd: null,
 		toggleDd(n) { this.openDd = this.openDd===n ? null : n; },
@@ -191,11 +204,11 @@ window.formData = function() {
 			{ key:'infantil', title:'Seguridad Infantil', threshold:5, warning:'Hogar no seguro para menores.',
 			  questions:['¿Enchufes sin protectores?','¿Ventanas sin seguro?','¿Objetos pequeños accesibles?','¿Cocina accesible para niños?','¿Escaleras sin barrera?'] }
 		],
-		// Initialize all answers to 0
-		answers: Array.from({length:7}, (_,i) => Array.from({length:5}, ()=>0)),
+		// Initialize all answers to -1 (unselected)
+		answers: Array.from({length:7}, (_,i) => Array.from({length:5}, ()=>-1)),
 
-		sectionScore(i) { return this.answers[i].reduce((a,b)=>a+b, 0); },
-		totalScore() { return this.answers.flat().reduce((a,b)=>a+b, 0); },
+		sectionScore(i) { return this.answers[i].reduce((a,b)=>a+(b<0?0:b), 0); },
+		totalScore() { return this.answers.flat().reduce((a,b)=>a+(b<0?0:b), 0); },
 		get totalColor() {
 			const t=this.totalScore();
 			if(t<=20) return 'text-green-600'; if(t<=40) return 'text-yellow-600';
@@ -212,15 +225,10 @@ window.formData = function() {
 			if(t<=70) return 'Riesgos importantes'; return 'Intervención urgente';
 		},
 		submitForm() {
+			// Validate all risk answers are selected
+			const hasEmpty = this.answers.flat().some(a => a < 0);
+			if(hasEmpty) { alert('Por favor, responda todas las preguntas de la autoevaluación.'); return; }
 			const form = document.getElementById('inspection-form');
-			// Add answer radios as hidden inputs
-			this.answers.forEach((sec,si) => {
-				sec.forEach((val,qi) => {
-					let inp = form.querySelector(`input[name="s${si}q${qi}"][type="hidden"]`);
-					if(!inp) { inp=document.createElement('input'); inp.type='hidden'; inp.name=`s${si}q${qi}`; form.appendChild(inp); }
-					inp.value = val;
-				});
-			});
 			form.submit();
 		}
 	};

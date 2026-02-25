@@ -20,14 +20,13 @@ async function init() {
                 inspector_nombre VARCHAR(150),
                 
                 tipo_vivienda VARCHAR(100),
-                pisos VARCHAR(10),
-                area_construccion DECIMAL(10,2),
-                sector VARCHAR(255),
+                plantas VARCHAR(10),
+                zona_construccion VARCHAR(50),
+                fecha VARCHAR(50),
                 pais VARCHAR(100),
                 region VARCHAR(100),
                 provincia VARCHAR(100),
                 grado_estudios VARCHAR(100),
-                zona_construccion VARCHAR(50),
                 
                 score_electrico INT DEFAULT 0,
                 score_incendio INT DEFAULT 0,
