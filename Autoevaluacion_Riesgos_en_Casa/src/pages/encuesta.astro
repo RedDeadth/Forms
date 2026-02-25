@@ -164,6 +164,8 @@ import Alpine from 'alpinejs';
 
 window.formData = function() {
 	return {
+userName: decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('user_name='))?.split('=')[1] || ''),
+
 		// Section 1
 		tipoVivienda:'', tipoViviendaLabel:'Seleccione...',
 		plantas:'', plantasLabel:'Seleccione...',

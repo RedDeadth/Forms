@@ -165,6 +165,7 @@ import Layout from '../layouts/Layout.astro';
         window.Alpine = Alpine;
         
         Alpine.data('surveyData', () => ({
+            userName: decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('user_name='))?.split('=')[1] || ''),
             step: 1,
             institucion_educativa: '',
             tipo_gestion: '',
