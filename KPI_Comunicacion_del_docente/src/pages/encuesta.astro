@@ -10,33 +10,250 @@ const userName = Astro.cookies.get('user_name')?.value;
 ---
 
 <Layout>
-	<main class="min-h-screen flex items-center justify-center p-6">
-		<div class="max-w-3xl w-full bg-white rounded-3xl p-10 shadow-2xl border">
-            
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-extrabold text-emerald-700">KPI Comunicación del Docente</h1>
-                <p class="text-gray-500 mt-2">Bienvenido/a, <strong>{userName}</strong></p>
+	<main class="max-w-4xl mx-auto py-10 px-6 grid-bg" x-data="surveyData">
+		<div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+			<h1 class="text-3xl font-extrabold text-emerald-700 tracking-tight text-center md:text-left">KPI Comunicación del Docente</h1>
+			<div class="flex gap-3 items-center">
+                <span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido {userName}</span>
+			    <a href="/api/logout" class="text-white bg-red-500 hover:bg-red-600 transition px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
             </div>
+		</div>
 
-            <form action="/api/submit" method="POST" class="space-y-8">
+		<form action="/api/submit" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 md:p-12 border border-gray-100 space-y-8" @submit="onSubmit">
                 <input type="hidden" name="encuestado_nombre" value={userName} />
+                <input type="hidden" name="fecha" :value="getCurrentDate()" />
+                <input type="hidden" name="score_total" :value="totalScore" />
+                <input type="hidden" name="nivel_docente" :value="nivelDocente" />
+                <input type="hidden" name="respuestas_json" :value="JSON.stringify(answers)" />
                 
-                <!-- Placeholder para preguntas -->
-                <div class="bg-emerald-50 border-2 border-dashed border-emerald-200 rounded-2xl p-10 text-center">
-                    <div class="text-5xl mb-4">📋</div>
-                    <h2 class="text-xl font-bold text-emerald-700 mb-2">Preguntas Pendientes</h2>
-                    <p class="text-gray-500">Las preguntas de esta encuesta serán agregadas próximamente.</p>
-                    <p class="text-gray-400 text-sm mt-2">Aquí se colocarán las preguntas sobre KPI de comunicación del docente.</p>
+                <!-- STEP 1: REGISTRO -->
+                <div x-show="step === 1" x-cloak class="space-y-6 animate-fade-in">
+                    <h2 class="section-title">1. Datos de Registro</h2>
+                    <p class="text-sm text-gray-500 mb-4">Por favor, complete estos datos antes de iniciar su autoevaluación.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="field-label">1.1 Institución Educativa <span class="text-red-500">*</span></label>
+                            <input type="text" name="institucion_educativa" x-model="institucion_educativa" class="cs-input" required />
+                        </div>
+                        <div>
+                            <label class="field-label">1.2 Tipo de gestión <span class="text-red-500">*</span></label>
+                            <input type="hidden" name="tipo_gestion" x-model="tipo_gestion" />
+                            <div class="relative">
+                                <button type="button" @click="toggleDd('tipo_gestion')" class="cs-trigger" :class="openDd==='tipo_gestion'&&'cs-trigger-active'">
+                                    <span x-text="tipo_gestionLabel" :class="!tipo_gestion&&'text-gray-400'"></span>
+                                    <svg class="cs-arrow" :class="openDd==='tipo_gestion'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div class="cs-list" :class="openDd==='tipo_gestion'?'cs-list-open':''">
+                                    <template x-for="o in [{v:'PUBLICA', l:'Pública'},{v:'PRIVADA', l:'Privada'},{v:'MIXTA', l:'Mixta'},{v:'OTROS', l:'Otros'}]">
+                                        <div class="cs-option" @click="sel('tipo_gestion',o.v,o.l)" x-text="o.l"></div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="field-label">1.3 Fecha</label>
+                            <input type="text" :value="getCurrentDate()" disabled class="cs-input text-gray-500 font-medium" />
+                        </div>
+                        <div>
+                            <label class="field-label">1.4 País <span class="text-red-500">*</span></label>
+                            <input type="text" name="pais" x-model="pais" @input="checkPeru" placeholder="Ej: Perú" class="cs-input" required />
+                        </div>
+                        <div :class="!isPeru?'opacity-50':''">
+                            <label class="field-label">1.5 Región <span x-show="isPeru" class="text-red-500">*</span></label>
+                            <input type="text" name="region" x-model="region" class="cs-input" :required="isPeru" :disabled="!isPeru" />
+                        </div>
+                        <div :class="!isPeru?'opacity-50':''">
+                            <label class="field-label">1.6 Provincia <span x-show="isPeru" class="text-red-500">*</span></label>
+                            <input type="text" name="provincia" x-model="provincia" class="cs-input" :required="isPeru" :disabled="!isPeru" />
+                        </div>
+                        <div>
+                            <label class="field-label">1.7 Programa de estudios <span class="text-red-500">*</span></label>
+                            <input type="text" name="programa_estudios" x-model="programa_estudios" class="cs-input" required />
+                        </div>
+                        <div>
+                            <label class="field-label">1.8 Cargo en la institución <span class="text-red-500">*</span></label>
+                            <input type="text" name="cargo_institucion" x-model="cargo_institucion" class="cs-input" required />
+                        </div>
+                        <div>
+                            <label class="field-label">1.9 Años enseñando <span class="text-red-500">*</span></label>
+                            <input type="number" min="0" name="anios_ensenando" x-model="anios_ensenando" class="cs-input" required />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="field-label">1.10 Profesión <span class="text-red-500">*</span></label>
+                            <input type="text" name="profesion" x-model="profesion" class="cs-input" required />
+                        </div>
+                    </div>
+                    
+                    <button type="button" @click="if(isStep1Valid) step = 2" :disabled="!isStep1Valid" class="mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        Comenzar Información
+                    </button>
                 </div>
 
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    Enviar Respuestas
-                </button>
-            </form>
+                <!-- STEP 2: ENCUESTA -->
+                <div x-show="step === 2" x-cloak class="space-y-8 animate-fade-in relative">
+                    <h2 class="section-title flex justify-between items-center w-full">
+                        2. Información
+                        <span class="text-sm font-normal text-emerald-800 bg-white/50 px-3 py-1 rounded-full"><span x-text="Object.keys(answers).length"></span>/21 Respondidas</span>
+                    </h2>
+                    
+                    <div class="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-200 text-sm mb-6">
+                        <strong>Escala de respuestas:</strong><br/>
+                        1 = Muy bajo &nbsp;|&nbsp; 2 = Bajo &nbsp;|&nbsp; 3 = Adecuado &nbsp;|&nbsp; 4 = Alto &nbsp;|&nbsp; 5 = Excelente
+                    </div>
 
-            <div class="text-center mt-6">
-                <a href="/api/logout" class="text-gray-400 hover:text-gray-600 text-sm transition">Cerrar Sesión</a>
-            </div>
-        </div>
+                    <template x-for="(cat, cIndex) in questions" :key="cIndex">
+                        <div class="bg-white border rounded-2xl p-6 shadow-sm mb-6">
+                            <h3 class="font-bold text-lg text-emerald-700 mb-4" x-text="'2.' + (cIndex+1) + ' ' + cat.category"></h3>
+                            
+                            <div class="space-y-6">
+                                <template x-for="(q, qIndex) in cat.list" :key="qIndex">
+                                    <div class="border-b pb-4 last:border-0 last:pb-0 hover:bg-gray-50 p-2 rounded-lg transition">
+                                        <p class="mb-3 font-medium text-gray-700 text-sm md:text-base" x-text="'2.' + (cIndex+1) + '.' + (qIndex+1) + ' ' + q"></p>
+                                        <div class="flex justify-between md:justify-start gap-2 md:gap-4 flex-wrap">
+                                            <template x-for="val in [1, 2, 3, 4, 5]" :key="val">
+                                                <label class="cursor-pointer">
+                                                    <input type="radio" class="hidden peer" :name="'q_' + cIndex + '_' + qIndex" :value="val" x-model="answers['q_' + cIndex + '_' + qIndex]">
+                                                    <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl border-2 peer-checked:bg-emerald-600 peer-checked:border-emerald-600 peer-checked:text-white peer-hover:border-emerald-400 font-bold text-gray-500 transition-all shadow-sm">
+                                                        <span x-text="val"></span>
+                                                    </div>
+                                                </label>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <div class="flex gap-4">
+                        <button type="button" @click="step = 1" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 rounded-xl shadow-md transition-all">Atrás</button>
+                        <button type="button" @click="if(allQuestionsAnswered) step = 3" :disabled="!allQuestionsAnswered" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            Ver Resultados
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: RESULTADOS -->
+                <div x-show="step === 3" x-cloak class="space-y-6 animate-fade-in text-center">
+                    <h2 class="section-title text-left w-full">3. Resultados del KPI</h2>
+                    
+                    <div class="py-10 bg-gradient-to-br from-emerald-50 to-teal-100 rounded-3xl border border-emerald-200 shadow-inner">
+                        <p class="text-gray-500 font-semibold mb-2">Puntaje Total Obtenido</p>
+                        <div class="text-7xl font-black text-emerald-600 drop-shadow-md mb-2"><span x-text="totalScore"></span><span class="text-3xl text-emerald-400">/105</span></div>
+                        <div class="mt-6">
+                            <span class="px-6 py-2 bg-white text-emerald-800 rounded-full font-bold shadow border text-lg" x-text="nivelDocente"></span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-6 max-w-lg mx-auto px-4">Esta evaluación mide 5 dimensiones esenciales de la comunicación educativa para identificar fortalezas y oportunidades de mejora.</p>
+                    </div>
+
+                    <div class="flex gap-4 mt-8">
+                        <button type="button" @click="step = 2" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 rounded-xl shadow-md transition-all">Revisar</button>
+                        <button type="submit" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all text-xl">
+                            Finalizar y Guardar
+                        </button>
+                    </div>
+                </div>
+
+            </form>
 	</main>
 </Layout>
+
+<script>
+    import Alpine from 'alpinejs';
+
+    if (!window.Alpine) {
+        window.Alpine = Alpine;
+        
+        Alpine.data('surveyData', () => ({
+            step: 1,
+            institucion_educativa: '',
+            tipo_gestion: '',
+            tipo_gestionLabel: 'Seleccione...',
+            pais: '',
+            region: '',
+            provincia: '',
+            programa_estudios: '',
+            cargo_institucion: '',
+            anios_ensenando: '',
+            profesion: '',
+            isPeru: false,
+            
+            openDd: null,
+            toggleDd(n) { this.openDd = this.openDd === n ? null : n; },
+            sel(f, v, l) { this[f] = v; this[f + 'Label'] = l; this.openDd = null; },
+            
+            questions: [
+                { category: 'Claridad Pedagógica', list: ['¿Mis estudiantes comprenden sin que tenga que repetir constantemente?', '¿Simplifico conceptos complejos?', '¿Uso ejemplos reales?', '¿Estructuro bien la clase?', '¿Destaco las ideas clave?'] },
+                { category: 'Impacto en el Aprendizaje', list: ['¿La mayoría logra los objetivos?', '¿Las evaluaciones reflejan comprensión real?', '¿Mis estudiantes aplican lo aprendido?', '¿Veo progreso durante el curso?'] },
+                { category: 'Comunicación y Conexión', list: ['¿Genero participación espontánea?', '¿Hacen preguntas sin miedo?', '¿Mantengo la atención?', '¿Percibo interés real?'] },
+                { category: 'Adaptabilidad Docente', list: ['¿Cambio de estrategia cuando no entienden?', '¿Detecto confusión rápido?', '¿Ajusto el ritmo?', '¿Leo el ambiente del aula?'] },
+                { category: 'Reflexión Profesional', list: ['¿Analizo lo que salió mal?', '¿Busco mejorar cada ciclo?', '¿Pido feedback?', '¿Experimento nuevas metodologías?'] }
+            ],
+            answers: {},
+            
+            checkPeru() {
+                const str = this.pais.trim().toLowerCase();
+                this.isPeru = (str === 'peru' || str === 'perú');
+                if(!this.isPeru) {
+                    this.region = '';
+                    this.provincia = '';
+                }
+            },
+
+            get totalScore() {
+                return Object.values(this.answers).reduce((a, b) => a + parseInt(b || 0), 0);
+            },
+            
+            get nivelDocente() {
+                let score = this.totalScore;
+                if(score >= 105) return 'Docente de alto impacto';
+                if(score >= 85) return 'Muy competente';
+                if(score >= 65) return 'Buen docente, pero escalable';
+                if(score >= 45) return 'Riesgo pedagógico';
+                return 'Urge rediseñar tu enseñanza';
+            },
+
+            get isStep1Valid() {
+                if (!this.institucion_educativa || !this.tipo_gestion || !this.pais || !this.programa_estudios || !this.cargo_institucion || !this.anios_ensenando || !this.profesion) return false;
+                if (this.isPeru && (!this.region || !this.provincia)) return false;
+                return true;
+            },
+            
+            get allQuestionsAnswered() {
+                let totalQuestions = this.questions.reduce((sum, cat) => sum + cat.list.length, 0);
+                return Object.keys(this.answers).length === totalQuestions;
+            },
+
+            getCurrentDate() {
+                const today = new Date();
+                return today.toLocaleDateString('es-ES');
+            }
+        }));
+
+        Alpine.start();
+    }
+</script>
+
+<style>
+	[x-cloak] { display: none !important; }
+    .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+	@keyframes fadeIn { 
+        from { opacity: 0; transform: translateY(-10px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
+	.section-title { font-size:1.25rem; font-weight:700; background:#dcfce7; display:inline-block; padding:.5rem 1rem; margin-bottom:1.5rem; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); color:#047857; }
+	.field-label { display:block; font-size:.875rem; font-weight:600; margin-bottom:.5rem; color:#374151; }
+	.cs-input { width:100%; border:1px solid #e5e7eb; border-radius:1rem; padding:.75rem 1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); outline:none; transition:all .2s; }
+	.cs-input:focus { border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,.15); }
+    .cs-input:disabled { background-color: #f3f4f6; cursor: not-allowed; }
+	.cs-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; padding:.75rem 1rem; background:#fff; border:1px solid #e5e7eb; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:pointer; transition:all .2s; text-align:left; font-size:.95rem; }
+	.cs-trigger:hover { border-color:#6ee7b7; }
+	.cs-trigger-active { border-color:#10b981; box-shadow:0 0 0 3px rgba(16,185,129,.15); border-bottom-left-radius:0; border-bottom-right-radius:0; z-index: 10; padding-bottom: 0.75rem; position: relative;}
+	.cs-arrow { width:1.25rem; height:1.25rem; color:#9CA3AF; transition:transform .3s cubic-bezier(.4,0,.2,1); flex-shrink:0; }
+	.cs-list { position:absolute; top:calc(100% - 1px); left:0; right:0; z-index:50; background:#fff; border:1px solid #10b981; border-top:none; border-bottom-left-radius:1rem; border-bottom-right-radius:1rem; box-shadow:0 10px 25px rgba(0,0,0,.1); max-height:0; overflow:hidden; opacity:0; transform:translateY(-4px); transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .25s ease,transform .25s ease; }
+	.cs-list-open { max-height:300px; opacity:1; transform:translateY(0); overflow-y:auto; }
+	.cs-option { padding:.7rem 1rem; cursor:pointer; transition:background .15s; font-size:.95rem; border-bottom:1px solid #f1f5f9; }
+	.cs-option:last-child { border-bottom:none; }
+	.cs-option:hover { background:#ecfdf5; color:#047857; }
+</style>
