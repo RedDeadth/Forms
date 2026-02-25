@@ -11,7 +11,6 @@ async function init() {
         await connection.query('CREATE DATABASE IF NOT EXISTS viviendas_db');
         await connection.query('USE viviendas_db');
         
-        // Drop old table if exists from the incorrect previous run
         await connection.query('DROP TABLE IF EXISTS evaluaciones');
         await connection.query('DROP TABLE IF EXISTS inspecciones');
 
@@ -27,26 +26,24 @@ async function init() {
                 pais VARCHAR(100),
                 region VARCHAR(100),
                 provincia VARCHAR(100),
+                grado_estudios VARCHAR(100),
+                zona_construccion VARCHAR(50),
                 
-                conoce_edad VARCHAR(50),
-                tiene_licencia VARCHAR(50),
-                numero_licencia VARCHAR(100),
-                pago_mano_obra VARCHAR(100),
-                tiene_planos VARCHAR(50),
-                autor_planos VARCHAR(255),
-                cuenta_asistencia VARCHAR(50),
-                nombre_profesional VARCHAR(255),
-                
-                danos_vivienda VARCHAR(50),
-                ubicacion_dano VARCHAR(100),
-                tipo_dano VARCHAR(100),
-                
-                severidad_sismo VARCHAR(50),
+                score_electrico INT DEFAULT 0,
+                score_incendio INT DEFAULT 0,
+                score_caidas INT DEFAULT 0,
+                score_humedad INT DEFAULT 0,
+                score_estructural INT DEFAULT 0,
+                score_salud INT DEFAULT 0,
+                score_infantil INT DEFAULT 0,
+                score_total INT DEFAULT 0,
+                nivel_riesgo VARCHAR(50),
+                respuestas_json JSON,
                 
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log('Database and inspecciones table initialized successfully for XAMPP.');
+        console.log('Database and inspecciones table initialized successfully.');
     } catch (error) {
         console.error('Failed to init DB:', error);
     } finally {

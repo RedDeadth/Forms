@@ -1,304 +1,147 @@
 ---
 export const prerender = false;
 import Layout from '../layouts/Layout.astro';
-
-// Proteger ruta
-if (!Astro.cookies.has('user_name')) {
-    return Astro.redirect('/');
-}
-
+if (!Astro.cookies.has('user_name')) { return Astro.redirect('/'); }
 const userName = Astro.cookies.get('user_name')?.value;
 ---
-
 <Layout>
 	<main class="max-w-4xl mx-auto py-10 px-6">
-        <div class="flex justify-between items-center mb-10">
-		    <h1 class="text-3xl font-extrabold text-blue-700 tracking-tight">Encuesta sobre la vivienda</h1>
-            <div class="flex items-center gap-4">
-                <span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido {userName}</span>
-            </div>
-        </div>
+		<div class="flex justify-between items-center mb-10">
+			<h1 class="text-3xl font-extrabold text-blue-700 tracking-tight">Encuesta sobre la vivienda</h1>
+			<span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido {userName}</span>
+		</div>
 		
-		<form id="inspection-form" action="/api/submit" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="{
-			tipoVivienda: '',
-			tipoViviendaLabel: 'Seleccione...',
-			pisos: '1',
-			pisosLabel: '1',
-			tieneLicencia: '',
-			tieneLicenciaLabel: 'Seleccione...',
-			pagoManoObra: '',
-			pagoManoObraLabel: 'Seleccione...',
-			tienePlanos: '',
-			tienePlanosLabel: 'Seleccione...',
-			cuentaAsistencia: '',
-			cuentaAsistenciaLabel: 'Seleccione...',
-			danosVivienda: 'no',
-			danosViviendaLabel: 'No',
-			ubicacionDano: 'paredes',
-			ubicacionDanoLabel: 'Paredes',
-			tipoDano: '',
-			severidadSismo: '',
-			openDropdown: null,
-			selectOption(field, value, label) {
-				this[field] = value;
-				this[field + 'Label'] = label;
-				this.openDropdown = null;
-			},
-			toggleDropdown(name) {
-				this.openDropdown = this.openDropdown === name ? null : name;
-			}
-		}" @click.away="openDropdown = null">
-            <input type="hidden" name="inspector_nombre" value={userName} />
-            
-			<!-- SECTION 1 -->
+		<form id="inspection-form" action="/api/submit" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
+			<input type="hidden" name="inspector_nombre" value={userName} />
+
+			<!-- ===== SECTION 1: Usuario e Inmueble ===== -->
 			<div class="mb-10 border-b pb-8">
-				<h2 class="text-xl font-bold bg-yellow-300 inline-block px-4 py-2 mb-6 rounded-2xl shadow-sm text-yellow-900">1. Usuario e Inmueble</h2>
+				<h2 class="section-title">1. Usuario e Inmueble</h2>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					
-					<!-- 1.1 Tipo de Vivienda (Custom Dropdown) -->
 					<div>
-						<label class="block text-sm font-semibold mb-2 text-gray-700">1.1 Tipo de Vivienda</label>
+						<label class="field-label">1.1 Tipo de Vivienda</label>
 						<input type="hidden" name="tipo_vivienda" x-model="tipoVivienda" />
 						<div class="relative">
-							<button type="button" @click="toggleDropdown('tipoVivienda')" class="cs-trigger" :class="openDropdown === 'tipoVivienda' && 'cs-trigger-active'">
-								<span x-text="tipoViviendaLabel" :class="tipoVivienda === '' && 'text-gray-400'"></span>
-								<svg class="cs-arrow" :class="openDropdown === 'tipoVivienda' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+							<button type="button" @click="toggleDd('tipoVivienda')" class="cs-trigger" :class="openDd==='tipoVivienda'&&'cs-trigger-active'">
+								<span x-text="tipoViviendaLabel" :class="!tipoVivienda&&'text-gray-400'"></span>
+								<svg class="cs-arrow" :class="openDd==='tipoVivienda'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
 							</button>
-							<div class="cs-list" :class="openDropdown === 'tipoVivienda' ? 'cs-list-open' : ''">
-								<div class="cs-option" @click="selectOption('tipoVivienda', 'Propia', 'Propia')">Propia</div>
-								<div class="cs-option" @click="selectOption('tipoVivienda', 'Alquiler', 'Alquiler')">Alquiler</div>
-								<div class="cs-option" @click="selectOption('tipoVivienda', 'Invasion', 'Invasión')">Invasión</div>
-								<div class="cs-option" @click="selectOption('tipoVivienda', 'Familiar', 'Familiar')">Familiar</div>
-								<div class="cs-option" @click="selectOption('tipoVivienda', 'Anticresis', 'Anticresis')">Anticresis</div>
+							<div class="cs-list" :class="openDd==='tipoVivienda'?'cs-list-open':''">
+								<template x-for="o in [{v:'Propia'},{v:'Alquiler'},{v:'Invasión'},{v:'Familiar'},{v:'Anticresis'}]"><div class="cs-option" @click="sel('tipoVivienda',o.v,o.v)" x-text="o.v"></div></template>
 							</div>
 						</div>
 					</div>
-
-					<!-- 1.2 Pisos (Custom Dropdown) -->
 					<div>
-						<label class="block text-sm font-semibold mb-2 text-gray-700">1.2 Pisos</label>
+						<label class="field-label">1.2 Pisos</label>
 						<input type="hidden" name="pisos" x-model="pisos" />
 						<div class="relative">
-							<button type="button" @click="toggleDropdown('pisos')" class="cs-trigger" :class="openDropdown === 'pisos' && 'cs-trigger-active'">
+							<button type="button" @click="toggleDd('pisos')" class="cs-trigger" :class="openDd==='pisos'&&'cs-trigger-active'">
 								<span x-text="pisosLabel"></span>
-								<svg class="cs-arrow" :class="openDropdown === 'pisos' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+								<svg class="cs-arrow" :class="openDd==='pisos'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
 							</button>
-							<div class="cs-list" :class="openDropdown === 'pisos' ? 'cs-list-open' : ''">
-								<div class="cs-option" @click="selectOption('pisos', '1', '1')">1</div>
-								<div class="cs-option" @click="selectOption('pisos', '2', '2')">2</div>
-								<div class="cs-option" @click="selectOption('pisos', '3', '3')">3</div>
-								<div class="cs-option" @click="selectOption('pisos', '4+', '4 o más')">4 o más</div>
+							<div class="cs-list" :class="openDd==='pisos'?'cs-list-open':''">
+								<template x-for="o in [{v:'1'},{v:'2'},{v:'3'},{v:'4+',l:'4 o más'}]"><div class="cs-option" @click="sel('pisos',o.v,o.l||o.v)" x-text="o.l||o.v"></div></template>
 							</div>
 						</div>
 					</div>
-
-					<div><label class="block text-sm font-semibold mb-2 text-gray-700">1.3 Área de construcción (m2)</label><input type="number" step="any" name="area_construccion" required class="cs-input" /></div>
-					<div><label class="block text-sm font-semibold mb-2 text-gray-700">1.4 Sector</label><input type="text" name="sector" class="cs-input" /></div>
-					<div><label class="block text-sm font-semibold mb-2 text-gray-700">1.5 País</label><input type="text" name="pais" required class="cs-input" /></div>
-					<div><label class="block text-sm font-semibold mb-2 text-gray-700">1.6 Región</label><input type="text" name="region" class="cs-input" /></div>
-					<div><label class="block text-sm font-semibold mb-2 text-gray-700">1.7 Provincia</label><input type="text" name="provincia" class="cs-input" /></div>
+					<div><label class="field-label">1.3 Área de construcción (m2)</label><input type="number" step="any" name="area_construccion" required class="cs-input"/></div>
+					<div><label class="field-label">1.4 Sector</label><input type="text" name="sector" class="cs-input"/></div>
+					<div><label class="field-label">1.5 País</label><input type="text" name="pais" required class="cs-input"/></div>
+					<div><label class="field-label">1.6 Región</label><input type="text" name="region" class="cs-input"/></div>
+					<div><label class="field-label">1.7 Provincia</label><input type="text" name="provincia" class="cs-input"/></div>
+					<div>
+						<label class="field-label">1.8 Grado de estudios concluida</label>
+						<input type="hidden" name="grado_estudios" x-model="gradoEstudios" />
+						<div class="relative">
+							<button type="button" @click="toggleDd('gradoEstudios')" class="cs-trigger" :class="openDd==='gradoEstudios'&&'cs-trigger-active'">
+								<span x-text="gradoEstudiosLabel" :class="!gradoEstudios&&'text-gray-400'"></span>
+								<svg class="cs-arrow" :class="openDd==='gradoEstudios'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+							</button>
+							<div class="cs-list" :class="openDd==='gradoEstudios'?'cs-list-open':''">
+								<template x-for="o in [{v:'Inicial'},{v:'Primaria'},{v:'Superior técnica'},{v:'Superior universitaria'},{v:'Ninguna'}]"><div class="cs-option" @click="sel('gradoEstudios',o.v,o.v)" x-text="o.v"></div></template>
+							</div>
+						</div>
+					</div>
+					<div>
+						<label class="field-label">1.9 Zona de construcción</label>
+						<input type="hidden" name="zona_construccion" x-model="zonaConstruccion" />
+						<div class="relative">
+							<button type="button" @click="toggleDd('zonaConstruccion')" class="cs-trigger" :class="openDd==='zonaConstruccion'&&'cs-trigger-active'">
+								<span x-text="zonaConstruccionLabel" :class="!zonaConstruccion&&'text-gray-400'"></span>
+								<svg class="cs-arrow" :class="openDd==='zonaConstruccion'&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+							</button>
+							<div class="cs-list" :class="openDd==='zonaConstruccion'?'cs-list-open':''">
+								<template x-for="o in [{v:'Urbana'},{v:'Rural'}]"><div class="cs-option" @click="sel('zonaConstruccion',o.v,o.v)" x-text="o.v"></div></template>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
-			<!-- SECTION 2: DINAMICA -->
+			<!-- ===== SECTION 2: Autoevaluación ===== -->
 			<div class="mb-10 border-b pb-8">
-				<h2 class="text-xl font-bold bg-yellow-300 inline-block px-4 py-2 mb-6 rounded-2xl shadow-sm text-yellow-900">2. Detalles de Construcción</h2>
-				
-				<div class="space-y-6">
-					<!-- Pregunta 2.1 -->
-					<div class="bg-gray-50 p-6 rounded-3xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
-						<label class="block font-bold mb-3 text-gray-800">2.1 ¿Conoce el año de construcción / edad del inmueble?</label>
-						<div class="flex gap-6">
-							<label class="cs-radio"><input type="radio" name="conoce_edad" value="si" required class="w-5 h-5 text-blue-600"> <span>Sí</span></label>
-							<label class="cs-radio"><input type="radio" name="conoce_edad" value="no" class="w-5 h-5 text-blue-600"> <span>No</span></label>
-							<label class="cs-radio"><input type="radio" name="conoce_edad" value="no_sabe" class="w-5 h-5 text-blue-600"> <span>No sabe</span></label>
+				<h2 class="section-title">2. Autoevaluación</h2>
+				<p class="text-sm text-gray-500 mb-6">Responda cada pregunta con: <strong>0</strong> = No existe el riesgo · <strong>1</strong> = Riesgo leve · <strong>2</strong> = Riesgo moderado · <strong>3</strong> = Riesgo alto</p>
+
+				<template x-for="(sec, si) in sections" :key="si">
+					<div class="mb-8">
+						<div class="flex items-center gap-3 mb-4">
+							<h3 class="text-lg font-bold text-gray-800" x-text="'2.'+(si+1)+' '+sec.title"></h3>
+							<span class="text-xs font-bold px-3 py-1 rounded-full" :class="sectionScore(si)>sec.threshold?'bg-red-100 text-red-700':'bg-green-100 text-green-700'" x-text="'Puntaje: '+sectionScore(si)+'/'+sec.questions.length*3"></span>
+						</div>
+						<div class="space-y-3">
+							<template x-for="(q, qi) in sec.questions" :key="qi">
+								<div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 flex flex-col md:flex-row md:items-center gap-3">
+									<p class="flex-1 text-sm font-medium text-gray-700" x-text="'2.'+(si+1)+'.'+(qi+1)+' '+q"></p>
+									<div class="relative shrink-0 w-52">
+										<button type="button" @click="openRiskDd = openRiskDd===si+'_'+qi ? null : si+'_'+qi" class="cs-trigger text-sm" :class="openRiskDd===si+'_'+qi&&'cs-trigger-active'">
+											<span class="truncate" x-text="riskOptions[answers[si][qi]].l" :class="riskLabelColors[answers[si][qi]]"></span>
+											<svg class="cs-arrow" :class="openRiskDd===si+'_'+qi&&'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+										</button>
+										<div class="cs-list" :class="openRiskDd===si+'_'+qi?'cs-list-open':''">
+											<template x-for="opt in riskOptions" :key="opt.v">
+												<div class="cs-option flex items-center gap-2" @click="answers[si][qi]=opt.v; openRiskDd=null">
+													<span class="w-2 h-2 rounded-full shrink-0" :class="riskDotColors[opt.v]"></span>
+													<span x-text="opt.l"></span>
+												</div>
+											</template>
+										</div>
+									</div>
+								</div>
+							</template>
+						</div>
+						<div class="mt-3 p-3 rounded-xl text-sm font-semibold" :class="sectionScore(si)>sec.threshold?'bg-red-50 text-red-700 border border-red-200':'bg-green-50 text-green-700 border border-green-200'">
+							<span x-text="'Resultado: '+sectionScore(si)+' puntos — '+(sectionScore(si)>sec.threshold?sec.warning:'Nivel aceptable')"></span>
 						</div>
 					</div>
-
-					<!-- Pregunta 2.2 -->
-					<div class="bg-gray-50 p-6 rounded-3xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
-						<label class="block font-bold mb-3 text-gray-800">2.2 ¿Cuenta con la respectiva licencia de construcción?</label>
-						<input type="hidden" name="tiene_licencia" x-model="tieneLicencia" />
-						<div class="relative w-full md:w-1/2">
-							<button type="button" @click="toggleDropdown('tieneLicencia')" class="cs-trigger" :class="openDropdown === 'tieneLicencia' && 'cs-trigger-active'">
-								<span x-text="tieneLicenciaLabel" :class="tieneLicencia === '' && 'text-gray-400'"></span>
-								<svg class="cs-arrow" :class="openDropdown === 'tieneLicencia' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-							</button>
-							<div class="cs-list" :class="openDropdown === 'tieneLicencia' ? 'cs-list-open' : ''">
-								<div class="cs-option" @click="selectOption('tieneLicencia', 'si', 'Sí')">Sí</div>
-								<div class="cs-option" @click="selectOption('tieneLicencia', 'no', 'No')">No</div>
-								<div class="cs-option" @click="selectOption('tieneLicencia', 'en_tramite', 'En trámite')">En trámite</div>
-							</div>
-						</div>
-						
-						<!-- SI tiene licencia -->
-						<div class="accordion" :class="tieneLicencia === 'si' && 'accordion-open'">
-							<div class="mt-6 p-6 bg-green-50 border border-green-200 rounded-2xl shadow-inner">
-								<label class="block text-sm font-semibold mb-2 text-green-900">2.2.1 Ingrese el número de licencia:</label>
-								<input type="text" name="numero_licencia" class="cs-input border-green-300 focus:ring-green-200 focus:border-green-500" />
-							</div>
-						</div>
-
-						<!-- NO tiene licencia -->
-						<div class="accordion accordion-lg" :class="tieneLicencia === 'no' && 'accordion-open'">
-							<div class="mt-6 p-6 bg-red-50 border border-red-200 rounded-3xl shadow-inner space-y-6">
-								<p class="font-bold text-red-700 text-lg border-b border-red-200 pb-2">Responda las siguientes preguntas:</p>
-								
-								<div>
-									<label class="block text-sm font-semibold mb-2 text-red-900">2.2.1 ¿A quién pagó la mano de obra?</label>
-									<input type="hidden" name="pago_mano_obra" x-model="pagoManoObra" />
-									<div class="relative">
-										<button type="button" @click="toggleDropdown('pagoManoObra')" class="cs-trigger cs-trigger-red" :class="openDropdown === 'pagoManoObra' && 'cs-trigger-active'">
-											<span x-text="pagoManoObraLabel" :class="pagoManoObra === '' && 'text-gray-400'"></span>
-											<svg class="cs-arrow" :class="openDropdown === 'pagoManoObra' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-										</button>
-										<div class="cs-list" :class="openDropdown === 'pagoManoObra' ? 'cs-list-open' : ''">
-											<div class="cs-option" @click="selectOption('pagoManoObra', 'maestro', 'Maestro de obra')">Maestro de obra</div>
-											<div class="cs-option" @click="selectOption('pagoManoObra', 'familiar', 'Familiar / Propio')">Familiar / Propio</div>
-											<div class="cs-option" @click="selectOption('pagoManoObra', 'empresa', 'Empresa constructora')">Empresa constructora</div>
-										</div>
-									</div>
-								</div>
-
-								<div>
-									<label class="block text-sm font-semibold mb-2 text-red-900">2.2.2 ¿La construcción cuenta con planos?</label>
-									<input type="hidden" name="tiene_planos" x-model="tienePlanos" />
-									<div class="relative">
-										<button type="button" @click="toggleDropdown('tienePlanos')" class="cs-trigger cs-trigger-red" :class="openDropdown === 'tienePlanos' && 'cs-trigger-active'">
-											<span x-text="tienePlanosLabel" :class="tienePlanos === '' && 'text-gray-400'"></span>
-											<svg class="cs-arrow" :class="openDropdown === 'tienePlanos' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-										</button>
-										<div class="cs-list" :class="openDropdown === 'tienePlanos' ? 'cs-list-open' : ''">
-											<div class="cs-option" @click="selectOption('tienePlanos', 'si', 'Sí')">Sí</div>
-											<div class="cs-option" @click="selectOption('tienePlanos', 'no', 'No')">No</div>
-										</div>
-									</div>
-								</div>
-								
-								<!-- Subcondicional Planos -->
-								<div class="accordion" :class="tienePlanos === 'si' && 'accordion-open'">
-									<div class="ml-4 p-5 bg-white border border-red-100 rounded-2xl shadow-sm mt-2">
-										<label class="block text-sm font-semibold mb-2 text-gray-700">¿Quién elaboró los planos?</label>
-										<input type="text" name="autor_planos" class="cs-input" />
-									</div>
-								</div>
-
-								<div>
-									<label class="block text-sm font-semibold mb-2 text-red-900">2.2.3 ¿Cuenta con asistencia técnica?</label>
-									<input type="hidden" name="cuenta_asistencia" x-model="cuentaAsistencia" />
-									<div class="relative">
-										<button type="button" @click="toggleDropdown('cuentaAsistencia')" class="cs-trigger cs-trigger-red" :class="openDropdown === 'cuentaAsistencia' && 'cs-trigger-active'">
-											<span x-text="cuentaAsistenciaLabel" :class="cuentaAsistencia === '' && 'text-gray-400'"></span>
-											<svg class="cs-arrow" :class="openDropdown === 'cuentaAsistencia' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-										</button>
-										<div class="cs-list" :class="openDropdown === 'cuentaAsistencia' ? 'cs-list-open' : ''">
-											<div class="cs-option" @click="selectOption('cuentaAsistencia', 'si', 'Sí')">Sí</div>
-											<div class="cs-option" @click="selectOption('cuentaAsistencia', 'no', 'No')">No</div>
-										</div>
-									</div>
-								</div>
-								
-								<!-- Subcondicional Asistencia -->
-								<div class="accordion" :class="cuentaAsistencia === 'si' && 'accordion-open'">
-									<div class="ml-4 p-5 bg-white border border-red-100 rounded-2xl shadow-sm mt-2">
-										<label class="block text-sm font-semibold mb-2 text-gray-700">Nombre del profesional a cargo:</label>
-										<input type="text" name="nombre_profesional" class="cs-input" />
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Pregunta 2.3 -->
-					<div class="bg-gray-50 p-6 rounded-3xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
-						<label class="block font-bold mb-3 text-gray-800">2.3 ¿Su vivienda presenta daños o rajaduras?</label>
-						<input type="hidden" name="danos_vivienda" x-model="danosVivienda" />
-						<div class="relative w-full md:w-1/2">
-							<button type="button" @click="toggleDropdown('danosVivienda')" class="cs-trigger" :class="openDropdown === 'danosVivienda' && 'cs-trigger-active'">
-								<span x-text="danosViviendaLabel"></span>
-								<svg class="cs-arrow" :class="openDropdown === 'danosVivienda' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-							</button>
-							<div class="cs-list" :class="openDropdown === 'danosVivienda' ? 'cs-list-open' : ''">
-								<div class="cs-option" @click="selectOption('danosVivienda', 'no', 'No')">No</div>
-								<div class="cs-option" @click="selectOption('danosVivienda', 'si', 'Sí')">Sí</div>
-							</div>
-						</div>
-
-						<!-- Muestra si HAY daños -->
-						<div class="accordion accordion-lg" :class="danosVivienda === 'si' && 'accordion-open'">
-							<div class="mt-6 p-6 bg-orange-50 border border-orange-200 rounded-3xl shadow-inner space-y-6">
-								<div>
-									<label class="block text-sm font-semibold mb-2 text-orange-900">2.3.1 Especifique en dónde:</label>
-									<input type="hidden" name="ubicacion_dano" x-model="ubicacionDano" />
-									<div class="relative">
-										<button type="button" @click="toggleDropdown('ubicacionDano')" class="cs-trigger cs-trigger-orange" :class="openDropdown === 'ubicacionDano' && 'cs-trigger-active'">
-											<span x-text="ubicacionDanoLabel"></span>
-											<svg class="cs-arrow" :class="openDropdown === 'ubicacionDano' && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-										</button>
-										<div class="cs-list" :class="openDropdown === 'ubicacionDano' ? 'cs-list-open' : ''">
-											<div class="cs-option" @click="selectOption('ubicacionDano', 'paredes', 'Paredes')">Paredes</div>
-											<div class="cs-option" @click="selectOption('ubicacionDano', 'techos', 'Techos')">Techos</div>
-											<div class="cs-option" @click="selectOption('ubicacionDano', 'columnas', 'Columnas / Vigas')">Columnas / Vigas</div>
-											<div class="cs-option" @click="selectOption('ubicacionDano', 'pisos', 'Pisos')">Pisos</div>
-											<div class="cs-option" @click="selectOption('ubicacionDano', 'otros', 'Otros')">Otros</div>
-										</div>
-									</div>
-								</div>
-								
-								<div>
-									<label class="block text-sm font-semibold mb-3 text-orange-900">2.3.2 Tipo de daño identificado:</label>
-									<div class="flex flex-col md:flex-row gap-4">
-										<label class="cs-card-radio" :class="tipoDano === 'fisura' && 'cs-card-radio-active'">
-											<input type="radio" x-model="tipoDano" name="tipo_dano" value="fisura" class="hidden"> 
-											<span class="text-orange-900 font-medium">Fisuras leves</span>
-										</label>
-										<label class="cs-card-radio" :class="tipoDano === 'grieta' && 'cs-card-radio-active'">
-											<input type="radio" x-model="tipoDano" name="tipo_dano" value="grieta" class="hidden"> 
-											<span class="text-orange-900 font-medium">Grietas moderadas</span>
-										</label>
-										<label class="cs-card-radio" :class="tipoDano === 'estructural' && 'cs-card-radio-active'">
-											<input type="radio" x-model="tipoDano" name="tipo_dano" value="estructural" class="hidden"> 
-											<span class="text-orange-900 font-medium">Daño estructural severo</span>
-										</label>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-				</div>
+				</template>
 			</div>
 
-			<!-- SECTION 3: Inspeccion final -->
+			<!-- ===== SECTION 3: Interpretación Final ===== -->
 			<div class="mb-10">
-				<h2 class="text-xl font-bold bg-yellow-300 inline-block px-4 py-2 mb-6 rounded-2xl shadow-sm text-yellow-900">3. Inspección Visual (SISMO)</h2>
-				<div class="bg-gray-50 p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-					<p class="text-sm font-medium text-gray-600 mb-4">Seleccione la severidad observada tras evento sísmico (si aplica):</p>
-					
-					<div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-						<label class="border-2 border-gray-200 bg-white p-5 rounded-3xl cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1" :class="{'bg-blue-50 border-blue-500 ring-4 ring-blue-100 shadow-lg scale-105': severidadSismo === 'leve'}">
-							<input type="radio" x-model="severidadSismo" name="severidad_sismo" value="leve" class="hidden">
-							<span class="block font-bold text-green-700 text-lg">Leve</span>
-							<span class="text-xs text-gray-500 mt-1 block">Sin daños mayores</span>
-						</label>
-						<label class="border-2 border-gray-200 bg-white p-5 rounded-3xl cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1" :class="{'bg-blue-50 border-blue-500 ring-4 ring-blue-100 shadow-lg scale-105': severidadSismo === 'moderado'}">
-							<input type="radio" x-model="severidadSismo" name="severidad_sismo" value="moderado" class="hidden">
-							<span class="block font-bold text-yellow-600 text-lg">Moderado</span>
-							<span class="text-xs text-gray-500 mt-1 block">Daños no estructurales</span>
-						</label>
-						<label class="border-2 border-gray-200 bg-white p-5 rounded-3xl cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1" :class="{'bg-blue-50 border-blue-500 ring-4 ring-blue-100 shadow-lg scale-105': severidadSismo === 'alto'}">
-							<input type="radio" x-model="severidadSismo" name="severidad_sismo" value="alto" class="hidden">
-							<span class="block font-bold text-orange-600 text-lg">Alto</span>
-							<span class="text-xs text-gray-500 mt-1 block">Peligro en estructura</span>
-						</label>
-						<label class="border-2 border-gray-200 bg-white p-5 rounded-3xl cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-1" :class="{'bg-blue-50 border-blue-500 ring-4 ring-blue-100 shadow-lg scale-105': severidadSismo === 'critico'}">
-							<input type="radio" x-model="severidadSismo" name="severidad_sismo" value="critico" class="hidden">
-							<span class="block font-bold text-red-600 text-lg">Crítico</span>
-							<span class="text-xs text-gray-500 mt-1 block">Colapso inminente</span>
-						</label>
+				<h2 class="section-title">3. Interpretación Final</h2>
+				<div class="bg-gray-50 p-6 rounded-3xl border border-gray-200 space-y-4">
+					<div class="text-center">
+						<p class="text-5xl font-black" :class="totalColor" x-text="totalScore()"></p>
+						<p class="text-lg font-bold mt-1" :class="totalColor" x-text="riskLevel()"></p>
+						<p class="text-sm text-gray-500 mt-1" x-text="riskDiagnosis()"></p>
+					</div>
+					<div class="grid grid-cols-4 gap-2 text-center text-xs mt-4">
+						<div class="p-2 rounded-xl" :class="totalScore()<=20?'bg-green-200 font-bold':'bg-green-50'">0-20<br/>Bajo</div>
+						<div class="p-2 rounded-xl" :class="totalScore()>20&&totalScore()<=40?'bg-yellow-200 font-bold':'bg-yellow-50'">21-40<br/>Moderado</div>
+						<div class="p-2 rounded-xl" :class="totalScore()>40&&totalScore()<=70?'bg-orange-200 font-bold':'bg-orange-50'">41-70<br/>Alto</div>
+						<div class="p-2 rounded-xl" :class="totalScore()>70?'bg-red-200 font-bold':'bg-red-50'">71-105<br/>Crítico</div>
 					</div>
 				</div>
 			</div>
+
+			<!-- Hidden fields para enviar scores -->
+			<template x-for="(sec, si) in sections" :key="'h'+si">
+				<input type="hidden" :name="'score_'+sec.key" :value="sectionScore(si)"/>
+			</template>
+			<input type="hidden" name="score_total" :value="totalScore()"/>
+			<input type="hidden" name="nivel_riesgo" :value="riskLevel()"/>
+			<input type="hidden" name="respuestas_json" :value="JSON.stringify(answers)"/>
 
 			<div class="text-center mt-12">
 				<button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-xl shadow-lg hover:bg-blue-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 w-full md:w-auto">Guardar Inspección</button>
@@ -308,137 +151,100 @@ const userName = Astro.cookies.get('user_name')?.value;
 </Layout>
 
 <script>
-	import Alpine from 'alpinejs';
-	window.Alpine = Alpine;
-	Alpine.start();
+import Alpine from 'alpinejs';
+
+window.formData = function() {
+	return {
+		// Section 1
+		tipoVivienda:'', tipoViviendaLabel:'Seleccione...',
+		pisos:'1', pisosLabel:'1',
+		gradoEstudios:'', gradoEstudiosLabel:'Seleccione...',
+		zonaConstruccion:'', zonaConstruccionLabel:'Seleccione...',
+		openDd: null,
+		openRiskDd: null,
+		toggleDd(n) { this.openDd = this.openDd===n ? null : n; },
+		sel(f,v,l) { this[f]=v; this[f+'Label']=l; this.openDd=null; },
+
+		// Section 2 - Risk options
+		riskOptions: [
+			{v:0,l:'No existe el riesgo'},{v:1,l:'Riesgo leve'},{v:2,l:'Riesgo moderado'},{v:3,l:'Riesgo alto'}
+		],
+		riskLabelColors: {
+			0:'text-green-700', 1:'text-yellow-600', 2:'text-orange-600', 3:'text-red-600'
+		},
+		riskDotColors: {
+			0:'bg-green-500', 1:'bg-yellow-500', 2:'bg-orange-500', 3:'bg-red-500'
+		},
+		sections: [
+			{ key:'electrico', title:'Riesgos Eléctricos', threshold:9, warning:'Riesgo serio de incendio.',
+			  questions:['¿Existen cables expuestos, pelados o deteriorados?','¿Usas extensiones o "zapatillas" sobrecargadas?','¿El tablero eléctrico es antiguo o no tiene llaves térmicas?','¿Hay enchufes cerca de zonas húmedas sin protección?','¿Notas chispazos o calentamiento en tomacorrientes?'] },
+			{ key:'incendio', title:'Riesgo de Incendio / Gas', threshold:8, warning:'Hogar vulnerable.',
+			  questions:['¿La manguera de gas tiene más de 5 años?','¿El balón está en un lugar sin ventilación?','¿Cocinas cerca de materiales inflamables?','¿No tienes extintor o detector de humo?','¿Dejas la cocina encendida sin supervisión?'] },
+			{ key:'caidas', title:'Riesgos de Caídas', threshold:7, warning:'Alta probabilidad de accidentes.',
+			  questions:['¿Tus pisos son resbalosos?','¿El baño no tiene alfombra antideslizante?','¿Las escaleras carecen de barandas firmes?','¿Hay objetos que obstaculizan el paso?','¿La iluminación es deficiente en la noche?'] },
+			{ key:'humedad', title:'Humedad, moho y aire', threshold:6, warning:'Ambiente no saludable.',
+			  questions:['¿Observas manchas de moho?','¿Hay filtraciones o goteras?','¿Ventilas poco la casa?','¿Percibes olor constante a humedad?','¿La ropa tarda demasiado en secar dentro de casa?'] },
+			{ key:'estructural', title:'Riesgo Estructural', threshold:6, warning:'Evaluación técnica recomendable.',
+			  questions:['¿La vivienda presenta grietas visibles?','¿Has construido sin asesoría técnica?','¿Hay columnas debilitadas o expuestas?','¿El techo muestra hundimientos?','¿Tienes objetos pesados mal fijados?'] },
+			{ key:'salud', title:'Riesgos para la Salud', threshold:7, warning:'Riesgo sanitario alto.',
+			  questions:['¿Almacenas productos químicos sin control?','¿Medicamentos al alcance de niños?','¿Basura acumulada?','¿Presencia de plagas?','¿Agua almacenada sin tapa?'] },
+			{ key:'infantil', title:'Seguridad Infantil', threshold:5, warning:'Hogar no seguro para menores.',
+			  questions:['¿Enchufes sin protectores?','¿Ventanas sin seguro?','¿Objetos pequeños accesibles?','¿Cocina accesible para niños?','¿Escaleras sin barrera?'] }
+		],
+		// Initialize all answers to 0
+		answers: Array.from({length:7}, (_,i) => Array.from({length:5}, ()=>0)),
+
+		sectionScore(i) { return this.answers[i].reduce((a,b)=>a+b, 0); },
+		totalScore() { return this.answers.flat().reduce((a,b)=>a+b, 0); },
+		get totalColor() {
+			const t=this.totalScore();
+			if(t<=20) return 'text-green-600'; if(t<=40) return 'text-yellow-600';
+			if(t<=70) return 'text-orange-600'; return 'text-red-600';
+		},
+		riskLevel() {
+			const t=this.totalScore();
+			if(t<=20) return 'Bajo'; if(t<=40) return 'Moderado';
+			if(t<=70) return 'Alto'; return 'Crítico';
+		},
+		riskDiagnosis() {
+			const t=this.totalScore();
+			if(t<=20) return 'Vivienda segura'; if(t<=40) return 'Mejoras recomendadas';
+			if(t<=70) return 'Riesgos importantes'; return 'Intervención urgente';
+		},
+		submitForm() {
+			const form = document.getElementById('inspection-form');
+			// Add answer radios as hidden inputs
+			this.answers.forEach((sec,si) => {
+				sec.forEach((val,qi) => {
+					let inp = form.querySelector(`input[name="s${si}q${qi}"][type="hidden"]`);
+					if(!inp) { inp=document.createElement('input'); inp.type='hidden'; inp.name=`s${si}q${qi}`; form.appendChild(inp); }
+					inp.value = val;
+				});
+			});
+			form.submit();
+		}
+	};
+};
+
+window.Alpine = Alpine;
+Alpine.start();
 </script>
 
 <style>
 	[x-cloak] { display: none !important; }
-
-	/* ===== CUSTOM INPUT ===== */
-	.cs-input {
-		width: 100%;
-		border: 1px solid #D1D5DB;
-		border-radius: 1rem;
-		padding: 0.75rem 1rem;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-		outline: none;
-		transition: all 0.2s;
-	}
-	.cs-input:focus {
-		border-color: #3B82F6;
-		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-	}
-
-	/* ===== CUSTOM SELECT TRIGGER ===== */
-	.cs-trigger {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.75rem 1rem;
-		background: white;
-		border: 1px solid #D1D5DB;
-		border-radius: 1rem;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-		cursor: pointer;
-		transition: all 0.2s;
-		text-align: left;
-		font-size: 0.95rem;
-	}
-	.cs-trigger:hover { border-color: #93C5FD; box-shadow: 0 2px 8px rgba(59,130,246,0.1); }
-	.cs-trigger-active { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-	.cs-trigger-red { border-color: #FCA5A5; }
-	.cs-trigger-red:hover { border-color: #F87171; }
-	.cs-trigger-orange { border-color: #FDBA74; }
-	.cs-trigger-orange:hover { border-color: #FB923C; }
-
-	/* Arrow */
-	.cs-arrow { width: 1.25rem; height: 1.25rem; color: #9CA3AF; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); flex-shrink: 0; }
-
-	/* ===== CUSTOM SELECT LIST ===== */
-	.cs-list {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		z-index: 50;
-		background: white;
-		border: 1px solid #3B82F6;
-		border-top: none;
-		border-bottom-left-radius: 1rem;
-		border-bottom-right-radius: 1rem;
-		box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-		max-height: 0;
-		overflow: hidden;
-		opacity: 0;
-		transform: translateY(-4px);
-		transition:
-			max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-			opacity 0.25s ease,
-			transform 0.25s ease;
-	}
-	.cs-list-open {
-		max-height: 300px;
-		opacity: 1;
-		transform: translateY(0);
-		overflow-y: auto;
-	}
-
-	/* ===== CUSTOM OPTION ===== */
-	.cs-option {
-		padding: 0.7rem 1rem;
-		cursor: pointer;
-		transition: background 0.15s, color 0.15s;
-		font-size: 0.95rem;
-		border-bottom: 1px solid #f1f5f9;
-	}
-	.cs-option:last-child { border-bottom: none; }
-	.cs-option:hover { background: #EFF6FF; color: #1D4ED8; }
-
-	/* ===== RADIO LABEL ===== */
-	.cs-radio {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		cursor: pointer;
-		color: #374151;
-	}
-
-	/* ===== CARD RADIO ===== */
-	.cs-card-radio {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		background: white;
-		border: 1px solid #FED7AA;
-		border-radius: 1rem;
-		cursor: pointer;
-		transition: all 0.2s;
-		box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-	}
-	.cs-card-radio:hover { background: #FFF7ED; }
-	.cs-card-radio-active { background: #FFF7ED; border-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
-
-	/* ===== ACCORDION ===== */
-	.accordion {
-		max-height: 0;
-		overflow: hidden;
-		opacity: 0;
-		transform: translateY(-8px);
-		transition:
-			max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-			opacity 0.4s ease,
-			transform 0.4s ease;
-	}
-	.accordion.accordion-open {
-		max-height: 300px;
-		opacity: 1;
-		transform: translateY(0);
-	}
-	.accordion.accordion-lg.accordion-open {
-		max-height: 800px;
-	}
+	.section-title { font-size:1.25rem; font-weight:700; background:#FDE047; display:inline-block; padding:.5rem 1rem; margin-bottom:1.5rem; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); color:#713F12; }
+	.field-label { display:block; font-size:.875rem; font-weight:600; margin-bottom:.5rem; color:#374151; }
+	.cs-input { width:100%; border:1px solid #D1D5DB; border-radius:1rem; padding:.75rem 1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); outline:none; transition:all .2s; }
+	.cs-input:focus { border-color:#3B82F6; box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+	.cs-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; padding:.75rem 1rem; background:#fff; border:1px solid #D1D5DB; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); cursor:pointer; transition:all .2s; text-align:left; font-size:.95rem; }
+	.cs-trigger:hover { border-color:#93C5FD; }
+	.cs-trigger-active { border-color:#3B82F6; box-shadow:0 0 0 3px rgba(59,130,246,.15); border-bottom-left-radius:0; border-bottom-right-radius:0; }
+	.cs-arrow { width:1.25rem; height:1.25rem; color:#9CA3AF; transition:transform .3s cubic-bezier(.4,0,.2,1); flex-shrink:0; }
+	.cs-list { position:absolute; top:100%; left:0; right:0; z-index:50; background:#fff; border:1px solid #3B82F6; border-top:none; border-bottom-left-radius:1rem; border-bottom-right-radius:1rem; box-shadow:0 10px 25px rgba(0,0,0,.1); max-height:0; overflow:hidden; opacity:0; transform:translateY(-4px); transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .25s ease,transform .25s ease; }
+	.cs-list-open { max-height:300px; opacity:1; transform:translateY(0); overflow-y:auto; }
+	.cs-option { padding:.7rem 1rem; cursor:pointer; transition:background .15s; font-size:.95rem; border-bottom:1px solid #f1f5f9; }
+	.cs-option:last-child { border-bottom:none; }
+	.cs-option:hover { background:#EFF6FF; color:#1D4ED8; }
+	.risk-btn { display:flex; flex-direction:column; align-items:center; gap:2px; padding:.4rem .6rem; border:2px solid #e5e7eb; border-radius:.75rem; cursor:pointer; transition:all .2s; min-width:3.5rem; text-align:center; background:#fff; }
+	.risk-btn:hover { border-color:#93C5FD; }
 </style>

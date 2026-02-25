@@ -6,10 +6,8 @@ export const POST = async ({ request, redirect }) => {
     try {
         const data = await request.formData();
         
-        // Metadata
-        const inspector_nombre = data.get('inspector_nombre');
-
         // Section 1
+        const inspector_nombre = data.get('inspector_nombre');
         const tipo_vivienda = data.get('tipo_vivienda');
         const pisos = data.get('pisos');
         const area_construccion = data.get('area_construccion');
@@ -17,41 +15,34 @@ export const POST = async ({ request, redirect }) => {
         const pais = data.get('pais');
         const region = data.get('region');
         const provincia = data.get('provincia');
-        
-        // Section 2
-        const conoce_edad = data.get('conoce_edad');
-        const tiene_licencia = data.get('tiene_licencia');
-        const numero_licencia = data.get('numero_licencia');
-        const pago_mano_obra = data.get('pago_mano_obra');
-        const tiene_planos = data.get('tiene_planos');
-        const autor_planos = data.get('autor_planos');
-        const cuenta_asistencia = data.get('cuenta_asistencia');
-        const nombre_profesional = data.get('nombre_profesional');
-        
-        // Section 2.3
-        const danos_vivienda = data.get('danos_vivienda');
-        const ubicacion_dano = data.get('ubicacion_dano');
-        const tipo_dano = data.get('tipo_dano');
-        
-        // Section 3
-        const severidad_sismo = data.get('severidad_sismo');
+        const grado_estudios = data.get('grado_estudios');
+        const zona_construccion = data.get('zona_construccion');
+
+        // Section 2 - Scores
+        const score_electrico = parseInt(data.get('score_electrico')) || 0;
+        const score_incendio = parseInt(data.get('score_incendio')) || 0;
+        const score_caidas = parseInt(data.get('score_caidas')) || 0;
+        const score_humedad = parseInt(data.get('score_humedad')) || 0;
+        const score_estructural = parseInt(data.get('score_estructural')) || 0;
+        const score_salud = parseInt(data.get('score_salud')) || 0;
+        const score_infantil = parseInt(data.get('score_infantil')) || 0;
+        const score_total = parseInt(data.get('score_total')) || 0;
+        const nivel_riesgo = data.get('nivel_riesgo');
+        const respuestas_json = data.get('respuestas_json');
 
         const [result] = await pool.query(
             `INSERT INTO inspecciones 
-            (inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia, 
-             conoce_edad, tiene_licencia, numero_licencia, pago_mano_obra, tiene_planos, autor_planos, cuenta_asistencia, nombre_profesional, 
-             danos_vivienda, ubicacion_dano, tipo_dano, 
-             severidad_sismo) 
+            (inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia, grado_estudios, zona_construccion,
+             score_electrico, score_incendio, score_caidas, score_humedad, score_estructural, score_salud, score_infantil,
+             score_total, nivel_riesgo, respuestas_json) 
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
-                inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia,
-                conoce_edad, tiene_licencia, numero_licencia, pago_mano_obra, tiene_planos, autor_planos, cuenta_asistencia, nombre_profesional,
-                danos_vivienda, ubicacion_dano, tipo_dano,
-                severidad_sismo
+                inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia, grado_estudios, zona_construccion,
+                score_electrico, score_incendio, score_caidas, score_humedad, score_estructural, score_salud, score_infantil,
+                score_total, nivel_riesgo, respuestas_json
             ]
         );
         
-        // Redirect a la pagina de exito
         return redirect('/gracias');
     } catch (error) {
         console.error('Error in DB Submission:', error);
