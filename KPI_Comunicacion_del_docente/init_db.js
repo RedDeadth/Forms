@@ -10,9 +10,7 @@ async function init() {
     try {
         await connection.query('CREATE DATABASE IF NOT EXISTS kpi_docente_db');
         await connection.query('USE kpi_docente_db');
-        
-        await connection.query('DROP TABLE IF EXISTS respuestas');
-        
+                
         await connection.query(`
             CREATE TABLE IF NOT EXISTS evaluaciones (
                 id INT AUTO_INCREMENT PRIMARY KEY,
