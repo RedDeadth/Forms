@@ -11,10 +11,8 @@ async function init() {
         await connection.query('CREATE DATABASE IF NOT EXISTS ludopatia_db');
         await connection.query('USE ludopatia_db');
         
-        await connection.query('DROP TABLE IF EXISTS evaluaciones');
-
         await connection.query(`
-            CREATE TABLE evaluaciones (
+            CREATE TABLE IF NOT EXISTS evaluaciones (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 
                 /* Sección 1 - Evaluador */

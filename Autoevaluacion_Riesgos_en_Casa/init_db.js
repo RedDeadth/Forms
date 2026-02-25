@@ -11,11 +11,8 @@ async function init() {
         await connection.query('CREATE DATABASE IF NOT EXISTS viviendas_db');
         await connection.query('USE viviendas_db');
         
-        await connection.query('DROP TABLE IF EXISTS evaluaciones');
-        await connection.query('DROP TABLE IF EXISTS inspecciones');
-
         await connection.query(`
-            CREATE TABLE inspecciones (
+            CREATE TABLE IF NOT EXISTS inspecciones (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 inspector_nombre VARCHAR(150),
                 

@@ -11,10 +11,8 @@ async function init() {
         await connection.query('CREATE DATABASE IF NOT EXISTS dependencia_ia_db');
         await connection.query('USE dependencia_ia_db');
         
-        await connection.query('DROP TABLE IF EXISTS respuestas');
-
         await connection.query(`
-            CREATE TABLE respuestas (
+            CREATE TABLE IF NOT EXISTS respuestas (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 encuestado_nombre VARCHAR(150),
                 respuestas_json JSON,
