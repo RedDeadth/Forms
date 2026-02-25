@@ -7,32 +7,371 @@ if (!Astro.cookies.has('user_name')) {
 }
 
 const userName = Astro.cookies.get('user_name')?.value;
+const errorMsg = Astro.url.searchParams.get('error');
 ---
 
 <Layout>
-	<main class="min-h-screen flex items-center justify-center p-6">
-		<div class="max-w-3xl w-full bg-white rounded-3xl p-10 shadow-2xl border">
+	<main class="min-h-screen p-6" x-data="encuestaApp()">
+		<div class="max-w-3xl mx-auto">
             
+            <!-- Header -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-extrabold text-purple-700">Encuesta de Ludopatía</h1>
-                <p class="text-gray-500 mt-2">Bienvenido/a, <strong>{userName}</strong></p>
+                <h1 class="text-3xl font-extrabold text-purple-700">Evaluación de Ludopatía</h1>
+                <p class="text-gray-500 mt-2">Evaluador: <strong>{userName}</strong></p>
             </div>
 
-            <form action="/api/submit" method="POST" class="space-y-8">
-                <input type="hidden" name="encuestado_nombre" value={userName} />
+            {errorMsg && (
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl mb-6 text-center text-sm font-bold">
+                    Error al guardar los datos. Intente nuevamente.
+                </div>
+            )}
+
+            <!-- Progress Bar -->
+            <div class="mb-8">
+                <div class="flex justify-between text-xs text-gray-500 mb-2">
+                    <span x-text="'Sección ' + currentSection + ' de 4'"></span>
+                    <span x-text="Math.round((currentSection/4)*100) + '%'"></span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-purple-600 h-2 rounded-full transition-all duration-500" :style="'width:' + (currentSection/4*100) + '%'"></div>
+                </div>
+            </div>
+
+            <form action="/api/submit" method="POST" @submit.prevent="submitForm($event)">
+                <input type="hidden" name="evaluador_nombre" value={userName} />
                 
-                <!-- Placeholder para preguntas -->
-                <div class="bg-purple-50 border-2 border-dashed border-purple-200 rounded-2xl p-10 text-center">
-                    <div class="text-5xl mb-4">📋</div>
-                    <h2 class="text-xl font-bold text-purple-700 mb-2">Preguntas Pendientes</h2>
-                    <p class="text-gray-500">Las preguntas de esta encuesta serán agregadas próximamente.</p>
-                    <p class="text-gray-400 text-sm mt-2">Aquí se colocarán las preguntas sobre evaluación de ludopatía.</p>
+                <!-- ========== SECCIÓN 1: EVALUADOR ========== -->
+                <div x-show="currentSection === 1" x-transition class="bg-white rounded-3xl p-8 shadow-xl border mb-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold">1</div>
+                        <h2 class="text-xl font-bold text-gray-800">Datos del Evaluador</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha</label>
+                            <input type="date" name="fecha" x-model="form.fecha" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none bg-gray-50" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">País</label>
+                            <input type="text" name="pais" x-model="form.pais" placeholder="Ej. Perú" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Región
+                                <span x-show="form.pais.toLowerCase() === 'perú' || form.pais.toLowerCase() === 'peru'" class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="region" x-model="form.region" placeholder="Ej. Lima"
+                                :required="form.pais.toLowerCase() === 'perú' || form.pais.toLowerCase() === 'peru'"
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Provincia
+                                <span x-show="form.pais.toLowerCase() === 'perú' || form.pais.toLowerCase() === 'peru'" class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="provincia" x-model="form.provincia" placeholder="Ej. Lima"
+                                :required="form.pais.toLowerCase() === 'perú' || form.pais.toLowerCase() === 'peru'"
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Grado de Estudios</label>
+                            <select name="grado_estudios_evaluador" x-model="form.grado_estudios_evaluador" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none bg-white">
+                                <option value="">Seleccione...</option>
+                                <option value="Inicial">Inicial</option>
+                                <option value="Primaria">Primaria</option>
+                                <option value="Secundaria">Secundaria</option>
+                                <option value="Superior">Superior</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Botón de envío (deshabilitado hasta que haya preguntas) -->
-                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    Enviar Respuestas
-                </button>
+                <!-- ========== SECCIÓN 2: EVALUADO ========== -->
+                <div x-show="currentSection === 2" x-transition class="bg-white rounded-3xl p-8 shadow-xl border mb-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold">2</div>
+                        <h2 class="text-xl font-bold text-gray-800">Datos del Evaluado</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Sexo</label>
+                            <select name="sexo" x-model="form.sexo" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none bg-white">
+                                <option value="">Seleccione...</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Edad</label>
+                            <input type="number" name="edad" x-model="form.edad" min="1" max="120" placeholder="Ej. 25" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Grado de Instrucción Concluida</label>
+                            <select name="grado_instruccion" x-model="form.grado_instruccion" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none bg-white">
+                                <option value="">Seleccione...</option>
+                                <option value="Inicial">Inicial</option>
+                                <option value="Primaria">Primaria</option>
+                                <option value="Superior Técnica">Superior Técnica</option>
+                                <option value="Superior Universitaria">Superior Universitaria</option>
+                                <option value="Ninguna">Ninguna</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Trabajo</label>
+                            <select name="tipo_trabajo" x-model="form.tipo_trabajo" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none bg-white">
+                                <option value="">Seleccione...</option>
+                                <option value="Dependiente">Dependiente</option>
+                                <option value="Independiente">Independiente</option>
+                                <option value="No trabaja (herencias)">No trabaja (por herencias)</option>
+                                <option value="Ama de casa">Ama de casa</option>
+                                <option value="Estudiante escolar">Estudiante escolar</option>
+                                <option value="Estudiante nivel superior">Estudiante nivel superior</option>
+                                <option value="Desempleado">Desempleado</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Nivel Socioeconómico</label>
+                            <select name="nivel_socioeconomico" x-model="form.nivel_socioeconomico" required
+                                class="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring focus:ring-purple-100 focus:border-purple-500 outline-none bg-white">
+                                <option value="">Seleccione...</option>
+                                <option value="A">A (Alto)</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E (Extrema pobreza)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== SECCIÓN 3: PREGUNTAS ========== -->
+                <div x-show="currentSection === 3" x-transition class="space-y-6 mb-6">
+                    
+                    <div class="bg-purple-50 rounded-2xl p-5 text-center border border-purple-200">
+                        <p class="text-purple-800 font-semibold">Responde pensando en los <strong>últimos 12 meses</strong>.</p>
+                        <div class="flex justify-center gap-6 mt-3 text-sm text-gray-600">
+                            <span><strong>0</strong> = Nunca</span>
+                            <span><strong>1</strong> = A veces</span>
+                            <span><strong>2</strong> = Con frecuencia</span>
+                            <span><strong>3</strong> = Casi siempre</span>
+                        </div>
+                    </div>
+
+                    <!-- 3.1 Conducta de Juego -->
+                    <div class="bg-white rounded-3xl p-8 shadow-xl border">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-sm">3.1</div>
+                            <h3 class="text-lg font-bold text-gray-800">Conducta de Juego</h3>
+                        </div>
+                        <template x-for="(q, i) in questions.conducta" :key="'c'+i">
+                            <div class="mb-5 last:mb-0">
+                                <p class="text-sm text-gray-700 mb-2 font-medium" x-text="q"></p>
+                                <div class="flex gap-2">
+                                    <template x-for="v in [0,1,2,3]" :key="'c'+i+'v'+v">
+                                        <button type="button" @click="answers.conducta[i] = v"
+                                            class="flex-1 py-2 rounded-xl text-sm font-bold transition-all border-2"
+                                            :class="answers.conducta[i] === v ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'">
+                                            <span x-text="v"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 3.2 Impacto Emocional -->
+                    <div class="bg-white rounded-3xl p-8 shadow-xl border">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-sm">3.2</div>
+                            <h3 class="text-lg font-bold text-gray-800">Impacto Emocional</h3>
+                        </div>
+                        <template x-for="(q, i) in questions.emocional" :key="'e'+i">
+                            <div class="mb-5 last:mb-0">
+                                <p class="text-sm text-gray-700 mb-2 font-medium" x-text="q"></p>
+                                <div class="flex gap-2">
+                                    <template x-for="v in [0,1,2,3]" :key="'e'+i+'v'+v">
+                                        <button type="button" @click="answers.emocional[i] = v"
+                                            class="flex-1 py-2 rounded-xl text-sm font-bold transition-all border-2"
+                                            :class="answers.emocional[i] === v ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'">
+                                            <span x-text="v"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 3.3 Consecuencias Económicas -->
+                    <div class="bg-white rounded-3xl p-8 shadow-xl border">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center font-bold text-sm">3.3</div>
+                            <h3 class="text-lg font-bold text-gray-800">Consecuencias Económicas</h3>
+                        </div>
+                        <template x-for="(q, i) in questions.economico" :key="'ec'+i">
+                            <div class="mb-5 last:mb-0">
+                                <p class="text-sm text-gray-700 mb-2 font-medium" x-text="q"></p>
+                                <div class="flex gap-2">
+                                    <template x-for="v in [0,1,2,3]" :key="'ec'+i+'v'+v">
+                                        <button type="button" @click="answers.economico[i] = v"
+                                            class="flex-1 py-2 rounded-xl text-sm font-bold transition-all border-2"
+                                            :class="answers.economico[i] === v ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'">
+                                            <span x-text="v"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 3.4 Relaciones y Vida Personal -->
+                    <div class="bg-white rounded-3xl p-8 shadow-xl border">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">3.4</div>
+                            <h3 class="text-lg font-bold text-gray-800">Relaciones y Vida Personal</h3>
+                        </div>
+                        <template x-for="(q, i) in questions.relaciones" :key="'r'+i">
+                            <div class="mb-5 last:mb-0">
+                                <p class="text-sm text-gray-700 mb-2 font-medium" x-text="q"></p>
+                                <div class="flex gap-2">
+                                    <template x-for="v in [0,1,2,3]" :key="'r'+i+'v'+v">
+                                        <button type="button" @click="answers.relaciones[i] = v"
+                                            class="flex-1 py-2 rounded-xl text-sm font-bold transition-all border-2"
+                                            :class="answers.relaciones[i] === v ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'">
+                                            <span x-text="v"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 3.5 Señales de Pérdida de Control -->
+                    <div class="bg-white rounded-3xl p-8 shadow-xl border">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-sm">3.5</div>
+                            <h3 class="text-lg font-bold text-gray-800">Señales de Pérdida de Control</h3>
+                        </div>
+                        <template x-for="(q, i) in questions.control" :key="'ct'+i">
+                            <div class="mb-5 last:mb-0">
+                                <p class="text-sm text-gray-700 mb-2 font-medium" x-text="q"></p>
+                                <div class="flex gap-2">
+                                    <template x-for="v in [0,1,2,3]" :key="'ct'+i+'v'+v">
+                                        <button type="button" @click="answers.control[i] = v"
+                                            class="flex-1 py-2 rounded-xl text-sm font-bold transition-all border-2"
+                                            :class="answers.control[i] === v ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-500 border-gray-200 hover:border-purple-300'">
+                                            <span x-text="v"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- ========== SECCIÓN 4: RESULTADOS ========== -->
+                <div x-show="currentSection === 4" x-transition class="bg-white rounded-3xl p-8 shadow-xl border mb-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold">4</div>
+                        <h2 class="text-xl font-bold text-gray-800">Interpretación de Resultados</h2>
+                    </div>
+
+                    <!-- Scores por categoría -->
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+                        <div class="bg-red-50 p-4 rounded-xl text-center border">
+                            <p class="text-xs text-gray-500">Conducta</p>
+                            <p class="text-2xl font-black text-red-600" x-text="scoreConduct + '/15'"></p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-xl text-center border">
+                            <p class="text-xs text-gray-500">Emocional</p>
+                            <p class="text-2xl font-black text-orange-600" x-text="scoreEmocional + '/9'"></p>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-xl text-center border">
+                            <p class="text-xs text-gray-500">Económico</p>
+                            <p class="text-2xl font-black text-yellow-600" x-text="scoreEconomico + '/9'"></p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-xl text-center border">
+                            <p class="text-xs text-gray-500">Relaciones</p>
+                            <p class="text-2xl font-black text-blue-600" x-text="scoreRelaciones + '/9'"></p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-xl text-center border">
+                            <p class="text-xs text-gray-500">Control</p>
+                            <p class="text-2xl font-black text-red-600" x-text="scoreControl + '/9'"></p>
+                        </div>
+                    </div>
+
+                    <!-- Score Total -->
+                    <div class="text-center mb-6 p-6 rounded-2xl" :class="nivelColor">
+                        <p class="text-5xl font-black" x-text="scoreTotal + '/51'"></p>
+                        <p class="text-lg font-bold mt-2" x-text="nivelRiesgo"></p>
+                        <p class="text-sm mt-1 opacity-80" x-text="nivelSignificado"></p>
+                    </div>
+
+                    <!-- Tabla de referencia -->
+                    <div class="overflow-hidden rounded-xl border">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left font-semibold">Puntaje</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Nivel</th>
+                                    <th class="px-3 py-2 text-left font-semibold">Significado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t" :class="scoreTotal <= 7 ? 'bg-green-50 font-bold' : ''"><td class="px-3 py-2">0–7</td><td class="px-3 py-2 text-green-700">Bajo</td><td class="px-3 py-2">Conducta recreativa</td></tr>
+                                <tr class="border-t" :class="scoreTotal >= 8 && scoreTotal <= 15 ? 'bg-yellow-50 font-bold' : ''"><td class="px-3 py-2">8–15</td><td class="px-3 py-2 text-yellow-700">Riesgo leve</td><td class="px-3 py-2">Atención temprana recomendable</td></tr>
+                                <tr class="border-t" :class="scoreTotal >= 16 && scoreTotal <= 24 ? 'bg-orange-50 font-bold' : ''"><td class="px-3 py-2">16–24</td><td class="px-3 py-2 text-orange-700">Riesgo moderado</td><td class="px-3 py-2">Posible juego problemático</td></tr>
+                                <tr class="border-t" :class="scoreTotal >= 25 && scoreTotal <= 35 ? 'bg-red-50 font-bold' : ''"><td class="px-3 py-2">25–35</td><td class="px-3 py-2 text-red-600">Alto</td><td class="px-3 py-2">Pérdida de control emergente</td></tr>
+                                <tr class="border-t" :class="scoreTotal >= 36 ? 'bg-red-100 font-bold' : ''"><td class="px-3 py-2">36–51</td><td class="px-3 py-2 text-red-800">Crítico</td><td class="px-3 py-2">Alta probabilidad de trastorno</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Hidden fields para enviar datos -->
+                    <input type="hidden" name="fecha" :value="form.fecha" />
+                    <input type="hidden" name="pais" :value="form.pais" />
+                    <input type="hidden" name="region" :value="form.region" />
+                    <input type="hidden" name="provincia" :value="form.provincia" />
+                    <input type="hidden" name="grado_estudios_evaluador" :value="form.grado_estudios_evaluador" />
+                    <input type="hidden" name="sexo" :value="form.sexo" />
+                    <input type="hidden" name="edad" :value="form.edad" />
+                    <input type="hidden" name="grado_instruccion" :value="form.grado_instruccion" />
+                    <input type="hidden" name="tipo_trabajo" :value="form.tipo_trabajo" />
+                    <input type="hidden" name="nivel_socioeconomico" :value="form.nivel_socioeconomico" />
+                    <input type="hidden" name="score_conducta" :value="scoreConduct" />
+                    <input type="hidden" name="score_emocional" :value="scoreEmocional" />
+                    <input type="hidden" name="score_economico" :value="scoreEconomico" />
+                    <input type="hidden" name="score_relaciones" :value="scoreRelaciones" />
+                    <input type="hidden" name="score_control" :value="scoreControl" />
+                    <input type="hidden" name="score_total" :value="scoreTotal" />
+                    <input type="hidden" name="nivel_riesgo" :value="nivelRiesgo" />
+                    <input type="hidden" name="respuestas_json" :value="JSON.stringify(answers)" />
+                </div>
+
+                <!-- Navegación -->
+                <div class="flex gap-4">
+                    <button type="button" x-show="currentSection > 1" @click="currentSection--"
+                        class="flex-1 bg-gray-200 text-gray-700 font-bold py-4 rounded-2xl hover:bg-gray-300 transition">
+                        ← Anterior
+                    </button>
+                    <button type="button" x-show="currentSection < 4" @click="nextSection()"
+                        class="flex-1 bg-purple-600 text-white font-bold py-4 rounded-2xl hover:bg-purple-700 transition shadow-lg">
+                        Siguiente →
+                    </button>
+                    <button type="submit" x-show="currentSection === 4"
+                        class="flex-1 bg-green-600 text-white font-bold py-4 rounded-2xl hover:bg-green-700 transition shadow-lg">
+                        ✓ Guardar Evaluación
+                    </button>
+                </div>
             </form>
 
             <div class="text-center mt-6">
@@ -41,3 +380,121 @@ const userName = Astro.cookies.get('user_name')?.value;
         </div>
 	</main>
 </Layout>
+
+<script>
+import Alpine from 'alpinejs';
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('encuestaApp', () => ({
+        currentSection: 1,
+        form: {
+            fecha: new Date().toISOString().split('T')[0],
+            pais: '',
+            region: '',
+            provincia: '',
+            grado_estudios_evaluador: '',
+            sexo: '',
+            edad: '',
+            grado_instruccion: '',
+            tipo_trabajo: '',
+            nivel_socioeconomico: ''
+        },
+        questions: {
+            conducta: [
+                '¿Has apostado más dinero del que podías permitirte perder?',
+                '¿Necesitas apostar cantidades cada vez mayores para sentir la misma emoción?',
+                '¿Has intentado dejar de jugar y no lo has logrado?',
+                '¿Vuelves otro día para recuperar el dinero perdido?',
+                '¿El juego ocupa gran parte de tus pensamientos?'
+            ],
+            emocional: [
+                '¿Te sientes inquieto o irritable cuando no puedes jugar?',
+                '¿Usas el juego para escapar del estrés, tristeza o ansiedad?',
+                '¿Después de perder, sientes urgencia por seguir apostando?'
+            ],
+            economico: [
+                '¿Has tomado dinero prestado para jugar?',
+                '¿El juego ha afectado tu estabilidad financiera?',
+                '¿Has ocultado pérdidas económicas?'
+            ],
+            relaciones: [
+                '¿Has mentido a tu familia o amigos sobre cuánto juegas?',
+                '¿El juego ha generado discusiones o conflictos?',
+                '¿Has descuidado responsabilidades por jugar?'
+            ],
+            control: [
+                '¿Sientes que el juego controla tus decisiones?',
+                '¿Has intentado recuperar pérdidas con apuestas más grandes?',
+                '¿Te cuesta parar incluso cuando sabes que deberías hacerlo?'
+            ]
+        },
+        answers: {
+            conducta: [null, null, null, null, null],
+            emocional: [null, null, null],
+            economico: [null, null, null],
+            relaciones: [null, null, null],
+            control: [null, null, null]
+        },
+
+        get scoreConduct() { return this.answers.conducta.reduce((a, v) => a + (v || 0), 0); },
+        get scoreEmocional() { return this.answers.emocional.reduce((a, v) => a + (v || 0), 0); },
+        get scoreEconomico() { return this.answers.economico.reduce((a, v) => a + (v || 0), 0); },
+        get scoreRelaciones() { return this.answers.relaciones.reduce((a, v) => a + (v || 0), 0); },
+        get scoreControl() { return this.answers.control.reduce((a, v) => a + (v || 0), 0); },
+        get scoreTotal() { return this.scoreConduct + this.scoreEmocional + this.scoreEconomico + this.scoreRelaciones + this.scoreControl; },
+        
+        get nivelRiesgo() {
+            const s = this.scoreTotal;
+            if (s <= 7) return 'Bajo';
+            if (s <= 15) return 'Riesgo leve';
+            if (s <= 24) return 'Riesgo moderado';
+            if (s <= 35) return 'Alto';
+            return 'Crítico';
+        },
+        get nivelSignificado() {
+            const s = this.scoreTotal;
+            if (s <= 7) return 'Conducta recreativa';
+            if (s <= 15) return 'Atención temprana recomendable';
+            if (s <= 24) return 'Posible juego problemático';
+            if (s <= 35) return 'Pérdida de control emergente';
+            return 'Alta probabilidad de trastorno';
+        },
+        get nivelColor() {
+            const s = this.scoreTotal;
+            if (s <= 7) return 'bg-green-100 text-green-800';
+            if (s <= 15) return 'bg-yellow-100 text-yellow-800';
+            if (s <= 24) return 'bg-orange-100 text-orange-800';
+            if (s <= 35) return 'bg-red-100 text-red-700';
+            return 'bg-red-200 text-red-900';
+        },
+
+        nextSection() {
+            if (this.currentSection === 3) {
+                // Validar que todas las preguntas tengan respuesta
+                const allAnswered = Object.values(this.answers).every(
+                    cat => cat.every(v => v !== null)
+                );
+                if (!allAnswered) {
+                    alert('Por favor responde todas las preguntas antes de continuar.');
+                    return;
+                }
+            }
+            this.currentSection++;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        submitForm(e) {
+            e.target.submit();
+        }
+    }));
+});
+
+if (!window.Alpine) {
+    window.Alpine = Alpine;
+    Alpine.start();
+}
+</script>
+
+<style>
+	[x-cloak] { display: none !important; }
+</style>
