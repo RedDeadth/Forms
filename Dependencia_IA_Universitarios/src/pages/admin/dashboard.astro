@@ -1,0 +1,89 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import { pool } from '../../db.js';
+
+if (!Astro.cookies.has('admin_auth')) {
+    return Astro.redirect('/');
+}
+
+let respuestas = [];
+
+try {
+    const [rows] = await pool.query('SELECT * FROM respuestas ORDER BY created_at DESC LIMIT 50');
+    respuestas = rows;
+} catch (e) {
+    console.error('Dashboard DB error:', e);
+}
+---
+
+<Layout>
+	<main class="min-h-screen p-6" x-data="{ search: '' }">
+        
+        <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-extrabold text-cyan-700">Panel de Administrador</h1>
+                <p class="text-gray-500 mt-1">Resumen de evaluaciones - Dependencia de IA en Universitarios</p>
+            </div>
+            <a href="/api/logout" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
+        </div>
+
+        <!-- Stats -->
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-2xl p-5 shadow-md border text-center">
+                <p class="text-3xl font-black text-cyan-600">{respuestas.length}</p>
+                <p class="text-xs text-gray-500 mt-1">Total Respuestas</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-md border text-center">
+                <p class="text-3xl font-black text-green-600">✓</p>
+                <p class="text-xs text-gray-500 mt-1">Base de Datos Activa</p>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-md border text-center">
+                <p class="text-3xl font-black text-blue-600">📋</p>
+                <p class="text-xs text-gray-500 mt-1">Encuestas Pendientes</p>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="max-w-7xl mx-auto mb-6">
+            <input type="text" x-model="search" placeholder="Buscar por nombre del encuestado..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-cyan-200 outline-none"/>
+        </div>
+
+        <!-- Table -->
+        <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg border overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">#</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Encuestado</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Respuestas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {respuestas.map((r, i) => {
+                            const searchStr = `${(r.encuestado_nombre||'').toLowerCase()}`;
+                            return (
+                                <tr class="border-b hover:bg-cyan-50 transition"
+                                    x-show={`'${searchStr}'.includes(search.toLowerCase()) || search===''`}>
+                                    <td class="px-4 py-3 text-gray-400">{i + 1}</td>
+                                    <td class="px-4 py-3 font-medium">{r.encuestado_nombre}</td>
+                                    <td class="px-4 py-3 text-gray-400 text-xs">{new Date(r.created_at).toLocaleDateString('es')}</td>
+                                    <td class="px-4 py-3 text-xs text-gray-500 max-w-md truncate">{r.respuestas_json ? JSON.stringify(JSON.parse(r.respuestas_json)).substring(0, 100) + '...' : '-'}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            {respuestas.length === 0 && <p class="text-center py-10 text-gray-400">No hay evaluaciones registradas aún.</p>}
+        </div>
+	</main>
+</Layout>
+
+<script>
+import Alpine from 'alpinejs';
+window.Alpine = Alpine;
+Alpine.start();
+</script>

@@ -1,0 +1,42 @@
+---
+export const prerender = false;
+import Layout from '../layouts/Layout.astro';
+
+if (!Astro.cookies.has('user_name')) {
+    return Astro.redirect('/');
+}
+
+const userName = Astro.cookies.get('user_name')?.value;
+---
+
+<Layout>
+	<main class="min-h-screen flex items-center justify-center p-6">
+		<div class="max-w-3xl w-full bg-white rounded-3xl p-10 shadow-2xl border">
+            
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-emerald-700">KPI Comunicación del Docente</h1>
+                <p class="text-gray-500 mt-2">Bienvenido/a, <strong>{userName}</strong></p>
+            </div>
+
+            <form action="/api/submit" method="POST" class="space-y-8">
+                <input type="hidden" name="encuestado_nombre" value={userName} />
+                
+                <!-- Placeholder para preguntas -->
+                <div class="bg-emerald-50 border-2 border-dashed border-emerald-200 rounded-2xl p-10 text-center">
+                    <div class="text-5xl mb-4">📋</div>
+                    <h2 class="text-xl font-bold text-emerald-700 mb-2">Preguntas Pendientes</h2>
+                    <p class="text-gray-500">Las preguntas de esta encuesta serán agregadas próximamente.</p>
+                    <p class="text-gray-400 text-sm mt-2">Aquí se colocarán las preguntas sobre KPI de comunicación del docente.</p>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Enviar Respuestas
+                </button>
+            </form>
+
+            <div class="text-center mt-6">
+                <a href="/api/logout" class="text-gray-400 hover:text-gray-600 text-sm transition">Cerrar Sesión</a>
+            </div>
+        </div>
+	</main>
+</Layout>

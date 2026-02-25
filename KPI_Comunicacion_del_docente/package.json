@@ -1,0 +1,22 @@
+{
+  "name": "kpi-comunicacion-docente",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@alpinejs/collapse": "^3.15.8",
+    "@astrojs/node": "^9.5.4",
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/alpinejs": "^3.13.11",
+    "alpinejs": "^3.15.8",
+    "astro": "^5.17.1",
+    "dotenv": "^17.3.1",
+    "mysql2": "^3.18.0",
+    "tailwindcss": "^4.2.1"
+  }
+}

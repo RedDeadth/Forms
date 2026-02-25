@@ -1,0 +1,108 @@
+---
+export const prerender = false;
+import Layout from '../layouts/Layout.astro';
+
+if (Astro.cookies.has('user_name')) return Astro.redirect('/encuesta');
+if (Astro.cookies.has('admin_auth')) return Astro.redirect('/admin/dashboard');
+
+const errorMsg = Astro.url.searchParams.get('error');
+const errorDetails = Astro.url.searchParams.get('details');
+---
+
+<Layout>
+	<main class="min-h-screen flex items-center justify-center p-6">
+		<div class="max-w-md w-full" x-data="{ currentRole: 'user' }">
+			
+			<div class="text-center mb-8">
+				<h1 class="text-4xl font-extrabold text-emerald-700 tracking-tight drop-shadow-sm">KPI Comunicación Docente</h1>
+				<p class="text-gray-600 mt-2 text-lg">Seleccione su rol para continuar</p>
+			</div>
+
+            {errorMsg && (
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl relative mb-6 text-center shadow-sm text-sm font-bold" role="alert">
+                    <span class="block sm:inline">{errorMsg === 'credenciales' ? 'Contraseña incorrecta' : 'Error al procesar solicitud'}</span>
+                    {errorDetails && <p class="text-xs font-normal mt-2 text-red-500 break-words">{errorDetails}</p>}
+                </div>
+            )}
+
+            <div class="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 transition-all duration-300">
+                
+                <!-- Selector (Toggle) -->
+                <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
+                    <button 
+                        type="button"
+                        @click="currentRole = 'user'" 
+                        class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                        :class="currentRole === 'user' ? 'bg-white text-emerald-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'">
+                        👤 Usuario
+                    </button>
+                    <button 
+                        type="button"
+                        @click="currentRole = 'admin'" 
+                        class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                        :class="currentRole === 'admin' ? 'bg-white text-gray-800 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'">
+                        ⚙️ Administrador
+                    </button>
+                </div>
+
+                <!-- Formulario -->
+                <form action="/api/auth" method="POST" class="space-y-6"
+                    x-ref="authForm"
+                    @submit="$refs.typeField.value = currentRole">
+                    
+                    <input type="hidden" name="type" x-ref="typeField" value="user" />
+
+                    <div x-show="currentRole === 'user'" x-cloak class="animate-fade-in text-center mb-6">
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-inner text-2xl mx-auto">👤</div>
+                        <h2 class="text-xl font-bold text-gray-800">Iniciar Encuesta</h2>
+                        <p class="text-gray-500 text-sm mt-1">Ingrese sus datos para evaluar la comunicación del docente.</p>
+                    </div>
+
+                    <div x-show="currentRole === 'admin'" x-cloak class="animate-fade-in text-center mb-6">
+                        <div class="w-16 h-16 bg-gray-100 text-gray-800 rounded-full flex items-center justify-center mb-4 shadow-inner text-2xl mx-auto">⚙️</div>
+                        <h2 class="text-xl font-bold text-gray-800">Panel Administrativo</h2>
+                        <p class="text-gray-500 text-sm mt-1">Ingreso exclusivo para visualizar los resultados.</p>
+                    </div>
+
+                    <!-- Input de Usuario -->
+                    <div x-show="currentRole === 'user'" x-cloak class="animate-fade-in">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombres y Apellidos</label>
+                        <input type="text" name="nombre" placeholder="Ej. Juan Pérez" class="w-full border-2 border-gray-200 rounded-2xl p-4 focus:ring focus:ring-emerald-100 focus:border-emerald-500 transition-all outline-none" />
+                    </div>
+
+                    <!-- Input de Administrador -->
+                    <div x-show="currentRole === 'admin'" x-cloak class="animate-fade-in">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Contraseña de acceso</label>
+                        <input type="password" name="password" placeholder="••••••••" class="w-full border-2 border-gray-200 rounded-2xl p-4 focus:ring focus:ring-gray-100 focus:border-gray-500 transition-all outline-none" />
+                        <p class="text-center text-gray-400 text-xs mt-3">Demo: admin123</p>
+                    </div>
+
+                    <!-- Botón dinámico -->
+                    <button type="submit" class="w-full text-white font-bold py-4 rounded-2xl shadow-lg transition-all"
+                        :class="currentRole === 'user' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-800 hover:bg-black'">
+                        <span x-text="currentRole === 'user' ? 'Comenzar Encuesta' : 'Acceder al Tablero'"></span>
+                    </button>
+                    
+                </form>
+            </div>
+
+		</div>
+	</main>
+</Layout>
+
+<script>
+	import Alpine from 'alpinejs';
+	if (!window.Alpine) {
+        window.Alpine = Alpine;
+	    Alpine.start();
+    }
+</script>
+
+<style>
+	[x-cloak] { display: none !important; }
+    .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+	@keyframes fadeIn { 
+        from { opacity: 0; transform: translateY(-5px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
+</style>
