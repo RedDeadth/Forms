@@ -1,42 +1,343 @@
 ---
 export const prerender = false;
 import Layout from '../layouts/Layout.astro';
-
-if (!Astro.cookies.has('user_name')) {
-    return Astro.redirect('/');
-}
-
-const userName = Astro.cookies.get('user_name')?.value;
 ---
-
 <Layout>
-	<main class="min-h-screen flex items-center justify-center p-6">
-		<div class="max-w-3xl w-full bg-white rounded-3xl p-10 shadow-2xl border">
-            
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-extrabold text-cyan-700">Dependencia de IA en Universitarios</h1>
-                <p class="text-gray-500 mt-2">Bienvenido/a, <strong>{userName}</strong></p>
-            </div>
+	<main class="max-w-4xl mx-auto py-10 px-6">
+		<div class="flex justify-between items-center mb-10">
+			<h1 class="text-3xl font-extrabold text-blue-700 tracking-tight">Dependencia IA Universitarios</h1>
+		</div>
+		
+		<form id="inspection-form" action="/api/submit" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
 
-            <form action="/api/submit" method="POST" class="space-y-8">
-                <input type="hidden" name="encuestado_nombre" value={userName} />
-                
-                <!-- Placeholder para preguntas -->
-                <div class="bg-cyan-50 border-2 border-dashed border-cyan-200 rounded-2xl p-10 text-center">
-                    <div class="text-5xl mb-4">📋</div>
-                    <h2 class="text-xl font-bold text-cyan-700 mb-2">Preguntas Pendientes</h2>
-                    <p class="text-gray-500">Las preguntas de esta encuesta serán agregadas próximamente.</p>
-                    <p class="text-gray-400 text-sm mt-2">Aquí se colocarán las preguntas sobre dependencia de IA en universitarios.</p>
-                </div>
+			<!-- ===== SECTION 1: Registro ===== -->
+			<div class="mb-10 border-b pb-8">
+				<h2 class="section-title">1. Registro</h2>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div>
+						<label class="field-label">1.1 Nombres (Opcional)</label>
+						<input type="text" name="nombres" class="cs-input" placeholder="Sus nombres"/>
+					</div>
+					<div>
+						<label class="field-label">1.2 Apellidos (Opcional)</label>
+						<input type="text" name="apellidos" class="cs-input" placeholder="Sus apellidos"/>
+					</div>
+					<div>
+						<label class="field-label">1.3 Correo electrónico *</label>
+						<input type="email" name="correo" required class="cs-input" placeholder="ejemplo@correo.com"/>
+					</div>
+					<div>
+						<label class="field-label">1.4 WhatsApp (Opcional)</label>
+						<input type="tel" name="whatsapp" class="cs-input" placeholder="+51 999 999 999"/>
+					</div>
+					<div>
+						<label class="field-label">1.5 Semestre *</label>
+						<input type="text" name="semestre" required class="cs-input" placeholder="Ej: 2024-2, VIII, 8vo"/>
+					</div>
+					<div>
+						<label class="field-label">1.6 Programa de estudios *</label>
+						<input type="text" name="programa_estudios" required class="cs-input" placeholder="Ej: Ingeniería de Sistemas"/>
+					</div>
+					<div>
+						<label class="field-label">1.7 Universidad *</label>
+						<input type="text" name="universidad" required class="cs-input" placeholder="Ej: Universidad Nacional..."/>
+					</div>
+					<div>
+						<label class="field-label">1.8 Fecha</label>
+						<input type="text" name="fecha" :value="new Date().toLocaleDateString('es-PE')" readonly class="cs-input bg-gray-50 text-gray-500 cursor-not-allowed"/>
+					</div>
+					<div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+						<div>
+							<label class="field-label">1.9 País *</label>
+							<input type="text" name="pais" x-model="pais" required class="cs-input" placeholder="Ej: Perú"/>
+						</div>
+						<div :class="pais.toLowerCase().trim()!=='perú'&&pais.toLowerCase().trim()!=='peru'?'opacity-50':''">
+							<label class="field-label">1.10 Región</label>
+							<input type="text" name="region" class="cs-input" :required="pais.toLowerCase().trim()==='perú'||pais.toLowerCase().trim()==='peru'"/>
+						</div>
+						<div :class="pais.toLowerCase().trim()!=='perú'&&pais.toLowerCase().trim()!=='peru'?'opacity-50':''">
+							<label class="field-label">1.11 Provincia</label>
+							<input type="text" name="provincia" class="cs-input" :required="pais.toLowerCase().trim()==='perú'||pais.toLowerCase().trim()==='peru'"/>
+						</div>
+					</div>
+				</div>
+			</div>
 
-                <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    Enviar Respuestas
-                </button>
-            </form>
+			<!-- ===== SECTION 2: Información ===== -->
+			<div class="mb-10 border-b pb-8">
+				<h2 class="section-title">2. Información</h2>
+				<p class="text-sm text-gray-500 mb-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+					Responda pensando en el <strong>último semestre académico</strong>.<br/><br/>
+					<strong>1</strong> = Totalmente en desacuerdo &nbsp;·&nbsp; 
+					<strong>2</strong> = En desacuerdo &nbsp;·&nbsp; 
+					<strong>3</strong> = Ligeramente en desacuerdo &nbsp;·&nbsp; 
+					<strong>4</strong> = Neutral &nbsp;·&nbsp; 
+					<strong>5</strong> = Ligeramente de acuerdo &nbsp;·&nbsp; 
+					<strong>6</strong> = De acuerdo &nbsp;·&nbsp; 
+					<strong>7</strong> = Totalmente de acuerdo
+				</p>
 
-            <div class="text-center mt-6">
-                <a href="/api/logout" class="text-gray-400 hover:text-gray-600 text-sm transition">Cerrar Sesión</a>
-            </div>
-        </div>
+				<template x-for="(sec, si) in sections" :key="si">
+					<div class="mb-8">
+						<div class="flex items-center gap-3 mb-4">
+							<h3 class="text-lg font-bold text-gray-800" x-text="'2.'+(si+1)+' '+sec.title"></h3>
+							<span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-800" x-text="'Puntaje: '+sectionScore(si)+'/'+(sec.questions.length*7)"></span>
+						</div>
+						<div class="space-y-3">
+							<template x-for="(q, qi) in sec.questions" :key="qi">
+								<div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 flex flex-col md:flex-row md:items-center gap-3">
+									<p class="flex-1 text-sm font-medium text-gray-700">
+										<span x-text="q.num+'. '"></span><span x-text="q.text"></span>
+									</p>
+									<div class="flex gap-1 shrink-0 justify-between md:justify-end w-full md:w-auto">
+										<template x-for="val in [1,2,3,4,5,6,7]" :key="val">
+											<button type="button" 
+												@click="answers[si][qi]=val" 
+												class="w-10 h-10 rounded-full border-2 text-sm font-bold flex items-center justify-center transition-colors"
+												:class="answers[si][qi]===val ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 bg-white text-gray-600 hover:border-blue-400 hover:text-blue-500'"
+												x-text="val">
+											</button>
+										</template>
+									</div>
+								</div>
+							</template>
+						</div>
+					</div>
+				</template>
+			</div>
+
+			<!-- ===== SECTION 3: Resultados (Preview) ===== -->
+			<div class="mb-10" x-show="allAnswered()" x-transition>
+				<h2 class="section-title">3. Resultados</h2>
+				<div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-200 space-y-6 shadow-inner">
+					
+					<div class="flex flex-col md:flex-row items-center justify-between gap-6">
+						<div class="text-center md:text-left flex-1">
+							<p class="text-sm font-bold text-blue-600 uppercase tracking-wider mb-1">Puntaje Total</p>
+							<p class="text-6xl font-black text-gray-800" x-text="totalScore()"></p>
+						</div>
+						
+						<div class="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center w-full">
+							<p class="text-xs text-gray-400 font-bold uppercase mb-1">Diagnóstico / Nivel</p>
+							<p class="text-xl font-bold text-gray-800" x-text="dependencyDiagnostic()"></p>
+							<p class="text-sm font-medium mt-1" :class="dependencyColorClass()" x-text="dependencyLevel()"></p>
+						</div>
+						
+						<div class="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center w-full relative overflow-hidden">
+							<!-- Barra de progreso fondo -->
+							<div class="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
+								<div class="h-full transition-all duration-1000" :class="idiaColorClass(true)" :style="'width: '+idiaPercent()+'%'"></div>
+							</div>
+							<p class="text-xs text-gray-400 font-bold uppercase mb-1">Índice IDIA</p>
+							<p class="text-3xl font-black" :class="idiaColorClass()" x-text="idiaPercent()+'%'"></p>
+							<p class="text-sm font-bold text-gray-600 mt-1" x-text="idiaLevel()"></p>
+						</div>
+					</div>
+
+					<!-- Escala de dependencia -->
+					<div class="grid grid-cols-4 gap-2 text-center text-xs mt-4">
+						<div class="p-2 rounded-xl" :class="totalScore()>=23&&totalScore()<=55?'bg-green-200 font-bold border-green-300 border':'bg-green-50 text-gray-500'">23–55<br/>Uso saludable</div>
+						<div class="p-2 rounded-xl" :class="totalScore()>=56&&totalScore()<=90?'bg-yellow-200 font-bold border-yellow-300 border':'bg-yellow-50 text-gray-500'">56–90<br/>Dep. funcional</div>
+						<div class="p-2 rounded-xl" :class="totalScore()>=91&&totalScore()<=125?'bg-orange-200 font-bold border-orange-300 border':'bg-orange-50 text-gray-500'">91–125<br/>Dep. alta</div>
+						<div class="p-2 rounded-xl" :class="totalScore()>=126?'bg-red-200 font-bold border-red-300 border':'bg-red-50 text-gray-500'">126–161<br/>Dep. crítica</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="p-4 bg-yellow-50 text-yellow-800 rounded-xl mb-6 text-sm font-medium border border-yellow-200 flex items-center gap-3" x-show="!allAnswered()">
+				<svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+				<p>Debe responder a las 23 preguntas para habilitar el envío del formulario y ver sus resultados. (Le faltan <strong x-text="missingCount()"></strong> preguntas por responder).</p>
+			</div>
+
+			<!-- Hidden fields para enviar datos al server -->
+			<input type="hidden" name="score_cognitiva" :value="sectionScore(0)"/>
+			<input type="hidden" name="score_sobreconfianza" :value="sectionScore(1)"/>
+			<input type="hidden" name="score_sustitucion" :value="sectionScore(2)"/>
+			<input type="hidden" name="score_compulsivo" :value="sectionScore(3)"/>
+			<input type="hidden" name="score_etico" :value="sectionScore(4)"/>
+			<input type="hidden" name="score_total" :value="totalScore()"/>
+			<input type="hidden" name="nivel_dependencia" :value="dependencyLevel()"/>
+			<input type="hidden" name="diagnostico" :value="dependencyDiagnostic()"/>
+			<input type="hidden" name="idia_porcentaje" :value="idiaPercent()"/>
+			<input type="hidden" name="idia_nivel" :value="idiaLevel()"/>
+			
+			<!-- Respuestas individuales (q1-q23) -->
+			<template x-for="(sec, si) in sections" :key="'hi'+si">
+				<template x-for="(q, qi) in sec.questions" :key="'hq'+qi">
+					<input type="hidden" :name="'q'+q.num" :value="answers[si][qi]" />
+				</template>
+			</template>
+
+			<div class="text-center mt-8">
+				<button type="submit" 
+					class="bg-blue-600 text-white px-10 py-4 rounded-full font-bold text-xl shadow-lg transition-all duration-300 w-full md:w-auto flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+					:disabled="!allAnswered()"
+					:class="allAnswered() ? 'hover:bg-blue-700 hover:shadow-xl hover:-translate-y-1' : ''">
+					<span>Enviar Evaluación</span>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+				</button>
+			</div>
+		</form>
 	</main>
 </Layout>
+
+<script>
+import Alpine from 'alpinejs';
+
+window.formData = function() {
+	return {
+		pais:'',
+		
+		sections: [
+			{ 
+				title:'Dependencia Cognitiva', 
+				questions:[
+					{num:1, text:'Me resulta difícil iniciar una tarea académica sin consultar IA.'},
+					{num:2, text:'Uso IA para organizar ideas que antes estructuraba por mi cuenta.'},
+					{num:3, text:'Siento que mi capacidad de análisis ha disminuido desde que uso IA.'},
+					{num:4, text:'Prefiero preguntar a la IA antes que pensar una solución inicial.'},
+					{num:5, text:'Cuando no tengo acceso a IA, mi rendimiento baja.'}
+				] 
+			},
+			{ 
+				title:'Sobreconfianza en la IA', 
+				questions:[
+					{num:6, text:'Confío en las respuestas de la IA sin verificarlas siempre.'},
+					{num:7, text:'Rara vez cuestiono la información generada por IA.'},
+					{num:8, text:'He entregado trabajos basados en IA sin revisar profundamente el contenido.'},
+					{num:9, text:'Considero que la IA suele tener más razón que mi propio criterio.'},
+					{num:10, text:'Me cuesta detectar errores en lo que produce la IA.'}
+				] 
+			},
+			{ 
+				title:'Sustitución del Aprendizaje', 
+				questions:[
+					{num:11, text:'Uso IA para evitar leer textos completos.'},
+					{num:12, text:'La IA ha reemplazado parte de mi estudio.'},
+					{num:13, text:'Aprendo menos profundamente cuando utilizo IA.'},
+					{num:14, text:'Uso IA para resolver tareas que debería practicar por mi cuenta.'},
+					{num:15, text:'Sin IA, algunas asignaturas me resultarían mucho más difíciles.'}
+				] 
+			},
+			{ 
+				title:'Uso Compulsivo', 
+				questions:[
+					{num:16, text:'Siento necesidad de usar IA incluso en tareas simples.'},
+					{num:17, text:'Me incomoda no tener IA disponible.'},
+					{num:18, text:'Pienso en usar IA automáticamente cuando me asignan un trabajo.'},
+					{num:19, text:'Me cuesta limitar su uso.'}
+				] 
+			},
+			{ 
+				title:'Impacto Ético-Académico', 
+				questions:[
+					{num:20, text:'He presentado contenido generado por IA que no comprendía totalmente.'},
+					{num:21, text:'Uso IA de formas que podrían ser cuestionadas académicamente.'},
+					{num:22, text:'Dependo de la IA para cumplir plazos.'},
+					{num:23, text:'Sin IA, mi desempeño académico sería mucho menor.'}
+				] 
+			}
+		],
+		
+		// Initialize all answers to 0 (unselected)
+		answers: [
+			Array(5).fill(0), // Sec 1: 5 qs
+			Array(5).fill(0), // Sec 2: 5 qs
+			Array(5).fill(0), // Sec 3: 5 qs
+			Array(4).fill(0), // Sec 4: 4 qs
+			Array(4).fill(0)  // Sec 5: 4 qs
+		],
+
+		sectionScore(si) { 
+			return this.answers[si].reduce((a,b)=>a+b, 0); 
+		},
+		
+		totalScore() { 
+			return this.answers.flat().reduce((a,b)=>a+b, 0); 
+		},
+
+		allAnswered() {
+			return this.answers.flat().every(a => a > 0);
+		},
+
+		missingCount() {
+			return this.answers.flat().filter(a => a === 0).length;
+		},
+
+		dependencyLevel() {
+			const t = this.totalScore();
+			if(t < 23) return 'Resultados inválidos'; // Mínimo posible es 23
+			if(t <= 55) return 'Uso saludable';
+			if(t <= 90) return 'Dependencia funcional';
+			if(t <= 125) return 'Dependencia alta';
+			return 'Dependencia crítica';
+		},
+
+		dependencyDiagnostic() {
+			const t = this.totalScore();
+			if(t < 23) return '-';
+			if(t <= 55) return 'IA como herramienta';
+			if(t <= 90) return 'Atención temprana';
+			if(t <= 125) return 'Riesgo académico';
+			return 'Sustitución del aprendizaje';
+		},
+
+		dependencyColorClass() {
+			const t = this.totalScore();
+			if(t <= 55) return 'text-green-600';
+			if(t <= 90) return 'text-yellow-600';
+			if(t <= 125) return 'text-orange-600';
+			return 'text-red-600';
+		},
+
+		idiaPercent() {
+			const t = this.totalScore();
+			if(t < 23) return 0;
+			return ((t / 161) * 100).toFixed(1);
+		},
+
+		idiaLevel() {
+			const p = parseFloat(this.idiaPercent());
+			if(p < 35) return 'Autonomía alta';
+			if(p <= 55) return 'Uso intensivo controlado';
+			if(p <= 75) return 'Sobredependencia';
+			return 'Alerta institucional';
+		},
+
+		idiaColorClass(bg = false) {
+			const p = parseFloat(this.idiaPercent());
+			if(p < 35) return bg ? 'bg-green-500' : 'text-green-600';
+			if(p <= 55) return bg ? 'bg-blue-500' : 'text-blue-600';
+			if(p <= 75) return bg ? 'bg-orange-500' : 'text-orange-600';
+			return bg ? 'bg-red-500' : 'text-red-600';
+		},
+
+		submitForm() {
+			if(!this.allAnswered()) { 
+				alert('Por favor, responda todas las 23 preguntas de la encuesta.'); 
+				return; 
+			}
+			
+			// Si no es perú, limpiamos región y provincia si el usuario escribió algo
+			if(this.pais.toLowerCase().trim() !== 'perú' && this.pais.toLowerCase().trim() !== 'peru') {
+				document.querySelector('input[name="region"]').value = '';
+				document.querySelector('input[name="provincia"]').value = '';
+			}
+
+			const form = document.getElementById('inspection-form');
+			form.submit();
+		}
+	};
+};
+
+window.Alpine = Alpine;
+Alpine.start();
+</script>
+
+<style>
+	[x-cloak] { display: none !important; }
+	.section-title { font-size:1.25rem; font-weight:700; background:#DBEAFE; display:inline-block; padding:.5rem 1rem; margin-bottom:1.5rem; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); color:#1E3A8A; }
+	.field-label { display:block; font-size:.875rem; font-weight:600; margin-bottom:.5rem; color:#374151; }
+	.cs-input { width:100%; border:1px solid #E5E7EB; border-radius:1rem; padding:.875rem 1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); outline:none; transition:all .2s; }
+	.cs-input:focus { border-color:#3B82F6; box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+</style>

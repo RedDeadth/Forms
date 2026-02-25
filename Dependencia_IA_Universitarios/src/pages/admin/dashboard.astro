@@ -7,46 +7,77 @@ if (!Astro.cookies.has('admin_auth')) {
     return Astro.redirect('/');
 }
 
-let respuestas = [];
+let stats = { total: 0, saludable: 0, funcional: 0, alta: 0, critica: 0, avgIDIA: 0, avgScore: 0 };
+let evaluaciones = [];
 
 try {
-    const [rows] = await pool.query('SELECT * FROM respuestas ORDER BY created_at DESC LIMIT 50');
-    respuestas = rows;
+    const [rows] = await pool.query('SELECT * FROM evaluaciones_ia ORDER BY created_at DESC LIMIT 50');
+    evaluaciones = rows;
+    stats.total = rows.length;
+    stats.saludable = rows.filter(r => r.nivel_dependencia === 'Uso saludable').length;
+    stats.funcional = rows.filter(r => r.nivel_dependencia === 'Dependencia funcional').length;
+    stats.alta = rows.filter(r => r.nivel_dependencia === 'Dependencia alta').length;
+    stats.critica = rows.filter(r => r.nivel_dependencia === 'Dependencia crítica').length;
+    stats.avgScore = rows.length ? Math.round(rows.reduce((a, r) => a + (r.score_total || 0), 0) / rows.length) : 0;
+    stats.avgIDIA = rows.length ? (rows.reduce((a, r) => a + parseFloat(r.idia_porcentaje || 0), 0) / rows.length).toFixed(1) : 0;
 } catch (e) {
     console.error('Dashboard DB error:', e);
+}
+
+function getIdiaColor(porcentaje) {
+    if (porcentaje < 35) return 'text-green-600';
+    if (porcentaje <= 55) return 'text-blue-600';
+    if (porcentaje <= 75) return 'text-orange-600';
+    return 'text-red-600';
 }
 ---
 
 <Layout>
-	<main class="min-h-screen p-6" x-data="{ search: '' }">
+	<main class="min-h-screen p-6" x-data="{ search: '', expandedRow: null }">
         
         <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
             <div>
-                <h1 class="text-3xl font-extrabold text-cyan-700">Panel de Administrador</h1>
-                <p class="text-gray-500 mt-1">Resumen de evaluaciones - Dependencia de IA en Universitarios</p>
+                <h1 class="text-3xl font-extrabold text-blue-700">Panel de Administrador</h1>
+                <p class="text-gray-500 mt-1">Resumen de Encuestas: Dependencia IA Universitarios</p>
             </div>
             <a href="/api/logout" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
         </div>
 
         <!-- Stats -->
-        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white rounded-2xl p-5 shadow-md border text-center">
-                <p class="text-3xl font-black text-cyan-600">{respuestas.length}</p>
-                <p class="text-xs text-gray-500 mt-1">Total Respuestas</p>
+        <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-7 gap-3 mb-8">
+            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                <p class="text-3xl font-black text-blue-600">{stats.total}</p>
+                <p class="text-xs text-gray-500 mt-1">Total</p>
             </div>
-            <div class="bg-white rounded-2xl p-5 shadow-md border text-center">
-                <p class="text-3xl font-black text-green-600">✓</p>
-                <p class="text-xs text-gray-500 mt-1">Base de Datos Activa</p>
+            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                <p class="text-3xl font-black text-indigo-500">{stats.avgScore}</p>
+                <p class="text-xs text-gray-500 mt-1">Puntaje Prom.</p>
             </div>
-            <div class="bg-white rounded-2xl p-5 shadow-md border text-center">
-                <p class="text-3xl font-black text-blue-600">📋</p>
-                <p class="text-xs text-gray-500 mt-1">Encuestas Pendientes</p>
+            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                <p class="text-3xl font-black text-indigo-700">{stats.avgIDIA}%</p>
+                <p class="text-xs text-gray-500 mt-1">IDIA Prom.</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                <p class="text-3xl font-black text-green-600">{stats.saludable}</p>
+                <p class="text-xs text-gray-500 mt-1">Saludable</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                <p class="text-3xl font-black text-yellow-600">{stats.funcional}</p>
+                <p class="text-xs text-gray-500 mt-1">Funcional</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                <p class="text-3xl font-black text-orange-600">{stats.alta}</p>
+                <p class="text-xs text-gray-500 mt-1">Dep. Alta</p>
+            </div>
+            <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
+                <p class="text-3xl font-black text-red-600">{stats.critica}</p>
+                <p class="text-xs text-gray-500 mt-1">Crítica</p>
             </div>
         </div>
 
         <!-- Search -->
         <div class="max-w-7xl mx-auto mb-6">
-            <input type="text" x-model="search" placeholder="Buscar por nombre del encuestado..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-cyan-200 outline-none"/>
+            <input type="text" x-model="search" placeholder="Buscar por nombres, universidad, programa o país..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-blue-200 outline-none"/>
         </div>
 
         <!-- Table -->
@@ -55,29 +86,73 @@ try {
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">#</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Encuestado</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Respuestas</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-600">#</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Nombres y Apellidos</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Universidad</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Programa</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Semestre</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-600">País</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Total</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-600">IDIA</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Nivel</th>
+                            <th class="px-3 py-3 text-left font-semibold text-gray-600">Fecha</th>
+                            <th class="px-3 py-3 text-center font-semibold text-gray-600">Detalle</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {respuestas.map((r, i) => {
-                            const searchStr = `${(r.encuestado_nombre||'').toLowerCase()}`;
+                        {evaluaciones.map((r, i) => {
+                            const lc = r.nivel_dependencia === 'Uso saludable' ? 'bg-green-100 text-green-700 border border-green-200' 
+                                : r.nivel_dependencia === 'Dependencia funcional' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                                : r.nivel_dependencia === 'Dependencia alta' ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                                : 'bg-red-100 text-red-700 border border-red-200';
+                            
+                            const idiaC = getIdiaColor(r.idia_porcentaje);
+
+                            const searchStr = `${(r.nombres||'').toLowerCase()} ${(r.apellidos||'').toLowerCase()} ${(r.universidad||'').toLowerCase()} ${(r.programa_estudios||'').toLowerCase()} ${(r.pais||'').toLowerCase()}`;
+                            
                             return (
-                                <tr class="border-b hover:bg-cyan-50 transition"
-                                    x-show={`'${searchStr}'.includes(search.toLowerCase()) || search===''`}>
-                                    <td class="px-4 py-3 text-gray-400">{i + 1}</td>
-                                    <td class="px-4 py-3 font-medium">{r.encuestado_nombre}</td>
-                                    <td class="px-4 py-3 text-gray-400 text-xs">{new Date(r.created_at).toLocaleDateString('es')}</td>
-                                    <td class="px-4 py-3 text-xs text-gray-500 max-w-md truncate">{r.respuestas_json ? JSON.stringify(JSON.parse(r.respuestas_json)).substring(0, 100) + '...' : '-'}</td>
+                                <>
+                                <tr class="border-b hover:bg-blue-50 transition cursor-pointer"
+                                    x-show={`'${searchStr}'.includes(search.toLowerCase()) || search===''`}
+                                    x-on:click={`expandedRow = expandedRow===${i} ? null : ${i}`}>
+                                    <td class="px-3 py-3 text-gray-400">{i + 1}</td>
+                                    <td class="px-3 py-3 font-medium text-gray-800">{(r.nombres || '') + ' ' + (r.apellidos || '-')}</td>
+                                    <td class="px-3 py-3 text-gray-600">{r.universidad || '-'}</td>
+                                    <td class="px-3 py-3 text-gray-600">{r.programa_estudios || '-'}</td>
+                                    <td class="px-3 py-3 text-center text-gray-600 font-medium">{r.semestre || '-'}</td>
+                                    <td class="px-3 py-3 text-gray-600">{r.pais || '-'}</td>
+                                    <td class="px-3 py-3 text-center font-bold text-gray-700">{r.score_total}</td>
+                                    <td class={`px-3 py-3 text-center font-bold ${idiaC}`}>{r.idia_porcentaje}%</td>
+                                    <td class="px-3 py-3 text-center"><span class={`px-2 py-1 rounded-lg text-xs font-bold ${lc}`}>{r.nivel_dependencia}</span></td>
+                                    <td class="px-3 py-3 text-gray-400 text-xs">{r.fecha || new Date(r.created_at).toLocaleDateString('es')}</td>
+                                    <td class="px-3 py-3 text-center text-blue-500">
+                                        <span x-text={`expandedRow===${i}?'▲':'▼'`}></span>
+                                    </td>
                                 </tr>
+                                <tr x-show={`expandedRow===${i}`} x-transition class="border-b bg-indigo-50/50">
+                                    <td colspan="11" class="px-6 py-5">
+                                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Cognitiva</p><p class="font-bold text-blue-900 text-lg">{r.score_cognitiva}/35</p></div>
+                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sobreconfianza</p><p class="font-bold text-blue-900 text-lg">{r.score_sobreconfianza}/35</p></div>
+                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sustitución</p><p class="font-bold text-blue-900 text-lg">{r.score_sustitucion}/35</p></div>
+                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Compulsivo</p><p class="font-bold text-blue-900 text-lg">{r.score_compulsivo}/28</p></div>
+                                            <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Ético</p><p class="font-bold text-blue-900 text-lg">{r.score_etico}/28</p></div>
+                                        </div>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Región / Prov.</p><p class="font-medium text-gray-700">{r.region || '-'} / {r.provincia || '-'}</p></div>
+                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Correo</p><p class="font-medium text-gray-700">{r.correo || '-'}</p></div>
+                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">WhatsApp</p><p class="font-medium text-gray-700">{r.whatsapp || '-'}</p></div>
+                                            <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Nivel IDIA</p><p class="font-medium text-gray-700">{r.idia_nivel || '-'}</p></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </>
                             );
                         })}
                     </tbody>
                 </table>
             </div>
-            {respuestas.length === 0 && <p class="text-center py-10 text-gray-400">No hay evaluaciones registradas aún.</p>}
+            {evaluaciones.length === 0 && <p class="text-center py-10 text-gray-400">No hay evaluaciones registradas aún.</p>}
         </div>
 	</main>
 </Layout>
