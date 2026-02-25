@@ -1,132 +1,111 @@
 ---
+export const prerender = false;
 import Layout from '../layouts/Layout.astro';
+
+// Redireccion automatica si ya esta logueado
+if (Astro.cookies.has('user_name')) return Astro.redirect('/encuesta');
+if (Astro.cookies.has('admin_auth')) return Astro.redirect('/admin/dashboard');
+
+const errorMsg = Astro.url.searchParams.get('error');
+const errorDetails = Astro.url.searchParams.get('details');
 ---
 
 <Layout>
-	<main class="max-w-4xl mx-auto py-10 px-6">
-		<h1 class="text-3xl font-bold text-center mb-8 text-blue-600">Evaluación de KPIs Gubernamentales/Corporativos</h1>
-		
-		<form id="kpi-form" action="/api/submit" method="POST" class="bg-white shadow-xl rounded-lg p-8">
+	<main class="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+		<div class="max-w-md w-full" x-data="{ currentRole: 'user' }">
 			
-			<!-- SECTION 1 -->
-			<div class="mb-10">
-				<h2 class="text-xl font-bold bg-yellow-300 inline-block px-2 py-1 mb-4 rounded">1. Registro</h2>
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div><label class="block text-sm font-medium mb-1">1.1 Nombres y Apellidos</label><input type="text" name="nombres" required class="w-full border rounded p-2" /></div>
-					<div><label class="block text-sm font-medium mb-1">1.2 Organización</label><input type="text" name="organizacion" required class="w-full border rounded p-2" /></div>
-					<div>
-						<label class="block text-sm font-medium mb-1">1.3 Tipo de gestión</label>
-						<select name="tipo_gestion" class="w-full border rounded p-2">
-							<option value="PUBLICA">PÚBLICA</option>
-							<option value="PRIVADA">PRIVADA</option>
-							<option value="MIXTA">MIXTA</option>
-							<option value="OTROS">OTROS</option>
-						</select>
-					</div>
-					<div><label class="block text-sm font-medium mb-1">1.4 Fecha</label><input type="date" name="fecha" required class="w-full border rounded p-2" /></div>
-					<div><label class="block text-sm font-medium mb-1">1.5 País</label><input type="text" name="pais" required class="w-full border rounded p-2" /></div>
-					<div><label class="block text-sm font-medium mb-1">1.6 Región</label><input type="text" name="region" class="w-full border rounded p-2" /></div>
-					<div><label class="block text-sm font-medium mb-1">1.7 Provincia</label><input type="text" name="provincia" class="w-full border rounded p-2" /></div>
-					<div><label class="block text-sm font-medium mb-1">1.8 Grado de estudios</label><input type="text" name="grado_estudios" class="w-full border rounded p-2" /></div>
-					<div><label class="block text-sm font-medium mb-1">1.9 Cargo en la organización</label><input type="text" name="cargo" required class="w-full border rounded p-2" /></div>
-				</div>
+			<div class="text-center mb-8">
+				<h1 class="text-4xl font-extrabold text-blue-700 tracking-tight drop-shadow-sm">Inspecciones</h1>
+				<p class="text-gray-600 mt-2 text-lg">Seleccione su rol para continuar</p>
 			</div>
 
-			<!-- SECTION 2 -->
-			<div class="mb-10">
-				<h2 class="text-xl font-bold bg-yellow-300 inline-block px-2 py-1 mb-4 rounded">2. Información (Solo números)</h2>
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div><label class="block text-sm font-medium mb-1">2.1 Objetivos cumplidos</label><input type="number" step="any" id="v2_1" name="v2_1" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.2 Objetivos programados</label><input type="number" step="any" id="v2_2" name="v2_2" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.3 Presupuesto ejecutado</label><input type="number" step="any" id="v2_3" name="v2_3" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.4 Presupuesto aprobado</label><input type="number" step="any" id="v2_4" name="v2_4" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.5 Gasto administrativo</label><input type="number" step="any" id="v2_5" name="v2_5" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.6 Gasto total</label><input type="number" step="any" id="v2_6" name="v2_6" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.7 Tiempo total de trámites</label><input type="number" step="any" id="v2_7" name="v2_7" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.8 Número de trámites</label><input type="number" step="any" id="v2_8" name="v2_8" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.9 Número de procesos gestionados</label><input type="number" step="any" id="v2_9" name="v2_9" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.10 Personal administrativo</label><input type="number" step="any" id="v2_10" name="v2_10" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.11 Número de salidas</label><input type="number" step="any" id="v2_11" name="v2_11" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.12 Promedio de empleados</label><input type="number" step="any" id="v2_12" name="v2_12" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.13 Horas no trabajadas</label><input type="number" step="any" id="v2_13" name="v2_13" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.14 Horas laborales programadas</label><input type="number" step="any" id="v2_14" name="v2_14" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.15 Procesos entregados a tiempo</label><input type="number" step="any" id="v2_15" name="v2_15" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.16 Procesos totales</label><input type="number" step="any" id="v2_16" name="v2_16" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.17 Procesos digitalizados</label><input type="number" step="any" id="v2_17" name="v2_17" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.18 Procesos totales</label><input type="number" step="any" id="v2_18" name="v2_18" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.19 Empleados satisfechos</label><input type="number" step="any" id="v2_19" name="v2_19" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-					<div><label class="block text-sm font-medium mb-1">2.20 Total encuestados (satisfacción)</label><input type="number" step="any" id="v2_20" name="v2_20" class="calc-input w-full border rounded p-2 text-right" value="0"/></div>
-				</div>
-			</div>
+            {errorMsg && (
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl relative mb-6 text-center shadow-sm text-sm font-bold" role="alert">
+                    <span class="block sm:inline">{errorMsg === 'credenciales' ? 'Contraseña incorrecta' : 'Error al procesar solicitud'}</span>
+                    {errorDetails && <p class="text-xs font-normal mt-2 text-red-500 break-words">{errorDetails}</p>}
+                </div>
+            )}
 
-			<!-- SECTION 3 -->
-			<div class="mb-10">
-				<h2 class="text-xl font-bold bg-yellow-300 inline-block px-2 py-1 mb-4 rounded">3. Cálculo e interpretación (Auto)</h2>
-				<div class="space-y-4">
-					<div class="p-4 bg-gray-50 border rounded flex justify-between items-center">
-						<div>
-							<h3 class="font-bold">3.1 Cumplimiento de objetivos estratégicos</h3>
-							<p class="text-sm text-gray-500">Operación: (2.1 / 2.2) * 100</p>
-						</div>
-						<div class="text-right">
-							<span id="r3_1_val" class="font-mono text-lg font-bold">0%</span>
-							<p id="r3_1_lvl" class="text-sm text-gray-600">-</p>
-							<p id="r3_1_msg" class="text-xs text-gray-500 italic">-</p>
-						</div>
-					</div>
-					<div class="p-4 bg-gray-50 border rounded flex justify-between items-center">
-						<div>
-							<h3 class="font-bold">3.2 Ejecución presupuestal</h3>
-							<p class="text-sm text-gray-500">Operación: (2.3 / 2.4) * 100</p>
-						</div>
-						<div class="text-right">
-							<span id="r3_2_val" class="font-mono text-lg font-bold">0%</span>
-							<p id="r3_2_lvl" class="text-sm text-gray-600">-</p>
-							<p id="r3_2_msg" class="text-xs text-gray-500 italic">-</p>
-						</div>
-					</div>
-					<!-- Mas calculos en script -->
-				</div>
-			</div>
+            <div class="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 transition-all duration-300">
+                
+                <!-- Selector (Toggle) -->
+                <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
+                    <button 
+                        type="button"
+                        @click="currentRole = 'user'" 
+                        class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                        :class="currentRole === 'user' ? 'bg-white text-blue-600 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'">
+                        👤 Usuario
+                    </button>
+                    <button 
+                        type="button"
+                        @click="currentRole = 'admin'" 
+                        class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                        :class="currentRole === 'admin' ? 'bg-white text-gray-800 shadow-md ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'">
+                        ⚙️ Administrador
+                    </button>
+                </div>
 
-			<div class="text-center">
-				<button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-blue-700 transition">Guardar Evaluación</button>
-			</div>
-		</form>
+                <!-- Formulario -->
+                <form action="/api/auth" method="POST" class="space-y-6"
+                    x-ref="authForm"
+                    @submit="$refs.typeField.value = currentRole">
+                    
+                    <!-- Campo hidden con valor explícito via x-ref -->
+                    <input type="hidden" name="type" x-ref="typeField" value="user" />
+
+                    <!-- Textos dinámicos del encabezado interno -->
+                    <div x-show="currentRole === 'user'" x-cloak class="animate-fade-in text-center mb-6">
+                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 shadow-inner text-2xl mx-auto">👤</div>
+                        <h2 class="text-xl font-bold text-gray-800">Cargar Inspección</h2>
+                        <p class="text-gray-500 text-sm mt-1">Ingrese sus datos para comenzar a evaluar una vivienda.</p>
+                    </div>
+
+                    <div x-show="currentRole === 'admin'" x-cloak class="animate-fade-in text-center mb-6">
+                        <div class="w-16 h-16 bg-gray-100 text-gray-800 rounded-full flex items-center justify-center mb-4 shadow-inner text-2xl mx-auto">⚙️</div>
+                        <h2 class="text-xl font-bold text-gray-800">Panel Administrativo</h2>
+                        <p class="text-gray-500 text-sm mt-1">Ingreso exclusivo para visualizar los resultados.</p>
+                    </div>
+
+                    <!-- Input de Usuario -->
+                    <div x-show="currentRole === 'user'" x-cloak class="animate-fade-in">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombres y Apellidos</label>
+                        <input type="text" name="nombre" placeholder="Ej. Juan Pérez" class="w-full border-2 border-gray-200 rounded-2xl p-4 focus:ring focus:ring-blue-100 focus:border-blue-500 transition-all outline-none" />
+                    </div>
+
+                    <!-- Input de Administrador -->
+                    <div x-show="currentRole === 'admin'" x-cloak class="animate-fade-in">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Contraseña de acceso</label>
+                        <input type="password" name="password" placeholder="••••••••" class="w-full border-2 border-gray-200 rounded-2xl p-4 focus:ring focus:ring-gray-100 focus:border-gray-500 transition-all outline-none" />
+                        <p class="text-center text-gray-400 text-xs mt-3">Demo: admin123</p>
+                    </div>
+
+                    <!-- Botón dinámico -->
+                    <button type="submit" class="w-full text-white font-bold py-4 rounded-2xl shadow-lg transition-all"
+                        :class="currentRole === 'user' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-800 hover:bg-black'">
+                        <span x-text="currentRole === 'user' ? 'Comenzar Encuesta' : 'Acceder al Tablero'"></span>
+                    </button>
+                    
+                </form>
+            </div>
+
+		</div>
 	</main>
 </Layout>
 
 <script>
-// JS Client side for live calculation
-function calculate() {
-	const getVal = (id) => parseFloat((document.getElementById(id) as HTMLInputElement).value) || 0;
-	const setVal = (baseId, val, lvl, msg) => {
-		document.getElementById(`${baseId}_val`)!.textContent = isNaN(val) ? "0%" : `${val.toFixed(2)}%`;
-		document.getElementById(`${baseId}_lvl`)!.textContent = lvl;
-		document.getElementById(`${baseId}_msg`)!.textContent = msg;
-	};
-
-	// 3.1
-	let v3_1 = (getVal('v2_1') / getVal('v2_2')) * 100;
-	let lvl3_1 = "-", msg3_1 = "-";
-	if (v3_1 >= 90) { lvl3_1 = "Excelente"; msg3_1 = "Organización alineada y bien dirigida"; }
-	else if (v3_1 >= 80) { lvl3_1 = "Aceptable"; msg3_1 = "Buen avance, pero hay desviaciones"; }
-	else if (v3_1 >= 70) { lvl3_1 = "Riesgo"; msg3_1 = "Fallas de planificación o seguimiento"; }
-	else if (v3_1 > 0) { lvl3_1 = "Crítico"; msg3_1 = "Institución sin control estratégico"; }
-	setVal("r3_1", v3_1, lvl3_1, msg3_1);
-
-	// 3.2
-	let v3_2 = (getVal('v2_3') / getVal('v2_4')) * 100;
-	let lvl3_2 = "-", msg3_2 = "-";
-	if (v3_2 >= 95) { lvl3_2 = "Óptimo"; msg3_2 = "Planeamiento sólido"; }
-	else if (v3_2 >= 90) { lvl3_2 = "Bueno"; msg3_2 = "Ligera subejecución"; }
-	else if (v3_2 >= 80) { lvl3_2 = "Alerta"; msg3_2 = "Problemas administrativos"; }
-	else if (v3_2 > 0) { lvl3_2 = "Deficiente"; msg3_2 = "Gestión ineficiente"; }
-	setVal("r3_2", v3_2, lvl3_2, msg3_2);
-}
-
-document.querySelectorAll('.calc-input').forEach(input => {
-	input.addEventListener('input', calculate);
-});
-calculate();
+	import Alpine from 'alpinejs';
+	if (!window.Alpine) {
+        window.Alpine = Alpine;
+	    Alpine.start();
+    }
 </script>
+
+<style>
+	[x-cloak] { display: none !important; }
+    .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+	@keyframes fadeIn { 
+        from { opacity: 0; transform: translateY(-5px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
+</style>

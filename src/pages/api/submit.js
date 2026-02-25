@@ -4,26 +4,55 @@ export const POST = async ({ request, redirect }) => {
     try {
         const data = await request.formData();
         
-        // Extract section 1
-        const r_name = data.get('nombres');
-        const r_org = data.get('organizacion');
-        const r_tipo = data.get('tipo_gestion');
-        const r_fecha = data.get('fecha');
+        // Metadata
+        const inspector_nombre = data.get('inspector_nombre');
+
+        // Section 1
+        const tipo_vivienda = data.get('tipo_vivienda');
+        const pisos = data.get('pisos');
+        const area_construccion = data.get('area_construccion');
+        const sector = data.get('sector');
+        const pais = data.get('pais');
+        const region = data.get('region');
+        const provincia = data.get('provincia');
         
-        // Extract section 2 (sample of values)
-        const v2_1 = parseFloat(data.get('v2_1')) || 0;
-        const v2_2 = parseFloat(data.get('v2_2')) || 0;
+        // Section 2
+        const conoce_edad = data.get('conoce_edad');
+        const tiene_licencia = data.get('tiene_licencia');
+        const numero_licencia = data.get('numero_licencia');
+        const pago_mano_obra = data.get('pago_mano_obra');
+        const tiene_planos = data.get('tiene_planos');
+        const autor_planos = data.get('autor_planos');
+        const cuenta_asistencia = data.get('cuenta_asistencia');
+        const nombre_profesional = data.get('nombre_profesional');
         
-        // Execute insertion (example logic)
+        // Section 2.3
+        const danos_vivienda = data.get('danos_vivienda');
+        const ubicacion_dano = data.get('ubicacion_dano');
+        const tipo_dano = data.get('tipo_dano');
+        
+        // Section 3
+        const severidad_sismo = data.get('severidad_sismo');
+
         const [result] = await pool.query(
-            `INSERT INTO evaluaciones (nombres, organizacion, tipo_gestion, fecha, v2_1, v2_2) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [r_name, r_org, r_tipo, r_fecha, v2_1, v2_2]
+            `INSERT INTO inspecciones 
+            (inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia, 
+             conoce_edad, tiene_licencia, numero_licencia, pago_mano_obra, tiene_planos, autor_planos, cuenta_asistencia, nombre_profesional, 
+             danos_vivienda, ubicacion_dano, tipo_dano, 
+             severidad_sismo) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                inspector_nombre, tipo_vivienda, pisos, area_construccion, sector, pais, region, provincia,
+                conoce_edad, tiene_licencia, numero_licencia, pago_mano_obra, tiene_planos, autor_planos, cuenta_asistencia, nombre_profesional,
+                danos_vivienda, ubicacion_dano, tipo_dano,
+                severidad_sismo
+            ]
         );
         
-        return redirect('/?success=true');
+        // Redirect a la pagina de exito
+        return redirect('/gracias');
     } catch (error) {
-        console.error('Error in DB:', error);
-        return redirect('/?error=true');
+        console.error('Error in DB Submission:', error);
+        return redirect('/encuesta?error=db');
     }
 }
