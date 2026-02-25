@@ -52,15 +52,22 @@ try {
         <!-- Table -->
         <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg border overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-sm whitespace-nowrap">
                     <thead class="bg-gray-50 border-b">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">#</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Encuestado</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">N°</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Institución</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Tipo Gestión</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">País</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Región</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Provincia</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Programa</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Cargo</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Años</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Profesión</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Puntaje</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-600">Nivel Docente</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha Reg.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -70,8 +77,15 @@ try {
                                 <tr class="border-b hover:bg-emerald-50 transition"
                                     x-show={`'${searchStr}'.includes(search.toLowerCase()) || search===''`}>
                                     <td class="px-4 py-3 text-gray-400">{i + 1}</td>
-                                    <td class="px-4 py-3 font-medium">{r.encuestado_nombre}</td>
-                                    <td class="px-4 py-3 text-gray-500">{r.institucion_educativa}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-800">{r.institucion_educativa}</td>
+                                    <td class="px-4 py-3 text-gray-600">{r.tipo_gestion}</td>
+                                    <td class="px-4 py-3 text-gray-600">{r.pais}</td>
+                                    <td class="px-4 py-3 text-gray-600">{r.region || '-'}</td>
+                                    <td class="px-4 py-3 text-gray-600">{r.provincia || '-'}</td>
+                                    <td class="px-4 py-3 text-gray-600">{r.programa_estudios}</td>
+                                    <td class="px-4 py-3 text-gray-600">{r.cargo_institucion}</td>
+                                    <td class="px-4 py-3 text-gray-600 text-center">{r.anios_ensenando}</td>
+                                    <td class="px-4 py-3 text-gray-600">{r.profesion}</td>
                                     <td class="px-4 py-3 font-bold text-emerald-600">{r.score_total}/105</td>
                                     <td class="px-4 py-3 text-xs font-semibold text-gray-700">{r.nivel_docente}</td>
                                     <td class="px-4 py-3 text-gray-400 text-xs">{new Date(r.created_at).toLocaleDateString('es')}</td>

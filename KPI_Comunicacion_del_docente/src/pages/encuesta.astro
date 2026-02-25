@@ -110,12 +110,18 @@ const userName = Astro.cookies.get('user_name')?.value;
                                 <template x-for="(q, qIndex) in cat.list" :key="qIndex">
                                     <div class="border-b pb-4 last:border-0 last:pb-0 hover:bg-gray-50 p-2 rounded-lg transition">
                                         <p class="mb-3 font-medium text-gray-700 text-sm md:text-base" x-text="'2.' + (cIndex+1) + '.' + (qIndex+1) + ' ' + q"></p>
-                                        <div class="flex justify-between md:justify-start gap-2 md:gap-4 flex-wrap">
-                                            <template x-for="val in [1, 2, 3, 4, 5]" :key="val">
+                                        <div class="flex justify-between md:justify-start gap-2 flex-col md:flex-row md:flex-wrap">
+                                            <template x-for="opt in [
+                                                {v: 1, l: '1 - Muy bajo'}, 
+                                                {v: 2, l: '2 - Bajo'}, 
+                                                {v: 3, l: '3 - Adecuado'}, 
+                                                {v: 4, l: '4 - Alto'}, 
+                                                {v: 5, l: '5 - Excelente'}
+                                            ]" :key="opt.v">
                                                 <label class="cursor-pointer">
-                                                    <input type="radio" class="hidden peer" :name="'q_' + cIndex + '_' + qIndex" :value="val" x-model="answers['q_' + cIndex + '_' + qIndex]">
-                                                    <div class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl border-2 peer-checked:bg-emerald-600 peer-checked:border-emerald-600 peer-checked:text-white peer-hover:border-emerald-400 font-bold text-gray-500 transition-all shadow-sm">
-                                                        <span x-text="val"></span>
+                                                    <input type="radio" class="hidden peer" :name="'q_' + cIndex + '_' + qIndex" :value="opt.v" x-model="answers['q_' + cIndex + '_' + qIndex]">
+                                                    <div class="px-4 py-2 flex items-center justify-center rounded-xl border-2 peer-checked:bg-emerald-600 peer-checked:border-emerald-600 peer-checked:text-white peer-hover:border-emerald-400 font-bold text-gray-500 transition-all shadow-sm text-sm md:text-base text-center w-full md:w-auto">
+                                                        <span x-text="opt.l"></span>
                                                     </div>
                                                 </label>
                                             </template>
