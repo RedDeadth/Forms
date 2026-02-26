@@ -1,8 +1,11 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+// Base path para el proyecto
+$BASE_PATH = '/dependencia_ia';
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /');
+    header('Location: ' . $BASE_PATH . '/');
     exit;
 }
 
@@ -13,15 +16,15 @@ if ($type === 'user') {
     if ($nombre !== '') {
         setcookie('user_name', $nombre, [
             'expires' => time() + 86400,
-            'path' => '/',
+            'path' => $BASE_PATH . '/',
             'httponly' => false,
             'secure' => false,
             'samesite' => 'Lax'
         ]);
-        header('Location: /encuesta');
+        header('Location: ' . $BASE_PATH . '/encuesta');
         exit;
     } else {
-        header('Location: /?error=nombre_vacio');
+        header('Location: ' . $BASE_PATH . '/?error=nombre_vacio');
         exit;
     }
 }
@@ -31,18 +34,18 @@ if ($type === 'admin') {
     if ($pwd === 'admin123') {
         setcookie('admin_auth', 'true', [
             'expires' => time() + 86400,
-            'path' => '/',
+            'path' => $BASE_PATH . '/',
             'httponly' => false,
             'secure' => false,
             'samesite' => 'Lax'
         ]);
-        header('Location: /admin/dashboard');
+        header('Location: ' . $BASE_PATH . '/admin/dashboard');
         exit;
     } else {
-        header('Location: /?error=credenciales');
+        header('Location: ' . $BASE_PATH . '/?error=credenciales');
         exit;
     }
 }
 
-header('Location: /?error=tipo_invalido');
+header('Location: ' . $BASE_PATH . '/?error=tipo_invalido');
 exit;

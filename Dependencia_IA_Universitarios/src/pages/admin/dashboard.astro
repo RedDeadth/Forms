@@ -29,7 +29,7 @@ import Layout from '../../layouts/Layout.astro';
                     <h1 class="text-3xl font-extrabold text-blue-700">Panel de Administrador</h1>
                     <p class="text-gray-500 mt-1">Resumen de Encuestas: Dependencia IA Universitarios</p>
                 </div>
-                <a href="/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
+                <a href="/dependencia_ia/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
             </div>
 
             <!-- Stats -->
@@ -160,7 +160,7 @@ window.dashboardData = function() {
             }
 
             try {
-                const res = await fetch('/api/get_evaluaciones.php');
+                const res = await fetch('/dependencia_ia/api/get_evaluaciones.php');
                 if (res.status === 401) {
                     this.authorized = false;
                     this.loading = false;

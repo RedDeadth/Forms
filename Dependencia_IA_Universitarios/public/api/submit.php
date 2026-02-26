@@ -1,8 +1,11 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+// Base path para el proyecto
+$BASE_PATH = '/dependencia_ia';
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /');
+    header('Location: ' . $BASE_PATH . '/');
     exit;
 }
 
@@ -82,11 +85,11 @@ try {
 
     $stmt->execute($params);
 
-    header('Location: /gracias');
+    header('Location: ' . $BASE_PATH . '/gracias');
     exit;
 
 } catch (Exception $e) {
     error_log('Error in DB Submission: ' . $e->getMessage());
-    header('Location: /encuesta?error=db');
+    header('Location: ' . $BASE_PATH . '/encuesta?error=db');
     exit;
 }

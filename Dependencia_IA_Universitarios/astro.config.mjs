@@ -11,5 +11,6 @@ export default defineConfig({
       tailwindcss()
     ]
   },
-  output: 'static'
+  output: 'static',
+  base: '/dependencia_ia'
 });
