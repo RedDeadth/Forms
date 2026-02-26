@@ -9,5 +9,6 @@ export default defineConfig({
       tailwindcss()
     ]
   },
-  output: 'static'
+  output: 'static',
+  base: '/evalua_ludopatia'
 });

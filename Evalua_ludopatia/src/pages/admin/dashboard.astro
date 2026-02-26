@@ -12,7 +12,7 @@ import Layout from '../../layouts/Layout.astro';
         <div x-show="!loading && authorized" x-cloak>
             <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
                 <div><h1 class="text-3xl font-extrabold text-purple-700">Panel de Administrador</h1><p class="text-gray-500 mt-1">Resumen de evaluaciones de ludopatía</p></div>
-                <a href="/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
+                <a href="/evalua_ludopatia/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
             </div>
             <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
                 <div class="bg-white rounded-2xl p-5 shadow-md border text-center"><p class="text-3xl font-black text-purple-600" x-text="stats.total"></p><p class="text-xs text-gray-500 mt-1">Total</p></div>
@@ -28,45 +28,52 @@ import Layout from '../../layouts/Layout.astro';
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 border-b">
                             <tr>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600">#</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Evaluador</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Sexo</th>
-                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Edad</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600">País</th>
-                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Total</th>
-                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Nivel</th>
-                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Fecha</th>
-                                <th class="px-3 py-3 text-center font-semibold text-gray-600">Detalle</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600" style="width: 50px;">#</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600" style="flex: 1; min-width: 150px;">Evaluador</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600" style="width: 100px;">Sexo</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600" style="width: 80px;">Edad</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600" style="width: 100px;">País</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600" style="width: 90px;">Total</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600" style="width: 150px;">Nivel</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600" style="width: 100px;">Fecha</th>
+                                <th class="px-3 py-3 text-center font-semibold text-gray-600" style="width: 80px;">Detalle</th>
                             </tr>
                         </thead>
                         <tbody>
                             <template x-for="(r, i) in filtered()" :key="i">
                                 <tr>
                                     <td colspan="9" class="p-0">
-                                        <div class="flex items-center border-b hover:bg-purple-50 transition cursor-pointer" @click="exp = exp===i ? null : i">
-                                            <div class="px-3 py-3 text-gray-400 w-[40px]" x-text="i+1"></div>
-                                            <div class="px-3 py-3 font-medium flex-1" x-text="r.evaluador_nombre||'-'"></div>
-                                            <div class="px-3 py-3 w-[70px]" x-text="r.sexo||'-'"></div>
-                                            <div class="px-3 py-3 text-center w-[50px]" x-text="r.edad||'-'"></div>
-                                            <div class="px-3 py-3 w-[80px]" x-text="r.pais||'-'"></div>
-                                            <div class="px-3 py-3 text-center font-bold w-[60px]" x-text="r.score_total+'/51'"></div>
-                                            <div class="px-3 py-3 text-center w-[120px]"><span class="px-2 py-1 rounded-lg text-xs font-bold" :class="lvlClass(r.nivel_riesgo)" x-text="r.nivel_riesgo"></span></div>
-                                            <div class="px-3 py-3 text-gray-400 text-xs w-[80px]" x-text="r.created_at?new Date(r.created_at).toLocaleDateString('es'):r.fecha||'-'"></div>
-                                            <div class="px-3 py-3 text-center text-purple-500 w-[40px]"><span x-text="exp===i?'▲':'▼'"></span></div>
+                                        <!-- Main Row -->
+                                        <div class="flex items-center border-b hover:bg-purple-50 transition cursor-pointer"
+                                             @click="exp = exp===i ? null : i">
+                                            <div class="px-3 py-3 text-gray-400 text-left" style="width: 50px;" x-text="i+1"></div>
+                                            <div class="px-3 py-3 font-medium text-gray-800 text-left" style="flex: 1; min-width: 150px;" x-text="r.evaluador_nombre||'-'"></div>
+                                            <div class="px-3 py-3 text-gray-600 text-left" style="width: 100px;" x-text="r.sexo||'-'"></div>
+                                            <div class="px-3 py-3 text-gray-600 text-center" style="width: 80px;" x-text="r.edad||'-'"></div>
+                                            <div class="px-3 py-3 text-gray-600 text-left" style="width: 100px;" x-text="r.pais||'-'"></div>
+                                            <div class="px-3 py-3 font-bold text-gray-700 text-center" style="width: 90px;" x-text="r.score_total+'/51'"></div>
+                                            <div class="px-3 py-3 text-center" style="width: 150px;">
+                                                <span class="px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap" :class="lvlClass(r.nivel_riesgo)" x-text="r.nivel_riesgo"></span>
+                                            </div>
+                                            <div class="px-3 py-3 text-gray-400 text-xs text-left" style="width: 100px;" x-text="r.created_at?new Date(r.created_at).toLocaleDateString('es'):r.fecha||'-'"></div>
+                                            <div class="px-3 py-3 text-purple-500 text-center" style="width: 80px;">
+                                                <span x-text="exp===i?'▲':'▼'"></span>
+                                            </div>
                                         </div>
-                                        <div x-show="exp===i" x-transition class="bg-purple-50/50 px-6 py-4 border-b">
+                                        <!-- Expanded Detail -->
+                                        <div x-show="exp===i" x-transition class="bg-purple-50/50 px-6 py-5 border-b">
                                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Conducta</p><p class="font-bold" x-text="r.score_conducta+'/15'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Emocional</p><p class="font-bold" x-text="r.score_emocional+'/9'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Económico</p><p class="font-bold" x-text="r.score_economico+'/9'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Relaciones</p><p class="font-bold" x-text="r.score_relaciones+'/9'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Control</p><p class="font-bold" x-text="r.score_control+'/9'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Conducta</p><p class="font-bold text-purple-900 text-lg" x-text="r.score_conducta+'/15'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Emocional</p><p class="font-bold text-purple-900 text-lg" x-text="r.score_emocional+'/9'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Económico</p><p class="font-bold text-purple-900 text-lg" x-text="r.score_economico+'/9'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Relaciones</p><p class="font-bold text-purple-900 text-lg" x-text="r.score_relaciones+'/9'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-purple-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Control</p><p class="font-bold text-purple-900 text-lg" x-text="r.score_control+'/9'"></p></div>
                                             </div>
                                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Región/Prov.</p><p class="font-medium" x-text="(r.region||'-')+' / '+(r.provincia||'-')"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Instrucción</p><p class="font-medium" x-text="r.grado_instruccion||'-'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Trabajo</p><p class="font-medium" x-text="r.tipo_trabajo||'-'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border"><p class="text-xs text-gray-400">Nivel Socioe.</p><p class="font-medium" x-text="r.nivel_socioeconomico||'-'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Región/Prov.</p><p class="font-medium text-gray-700" x-text="(r.region||'-')+' / '+(r.provincia||'-')"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Instrucción</p><p class="font-medium text-gray-700" x-text="r.grado_instruccion||'-'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Trabajo</p><p class="font-medium text-gray-700" x-text="r.tipo_trabajo||'-'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Nivel Socioe.</p><p class="font-medium text-gray-700" x-text="r.nivel_socioeconomico||'-'"></p></div>
                                             </div>
                                         </div>
                                     </td>
@@ -89,7 +96,7 @@ window.dashboardData = function() {
         async init() {
             if (!document.cookie.includes('admin_auth=true')) { this.loading=false; return; }
             try {
-                const res = await fetch('/api/get_evaluaciones.php');
+                const res = await fetch('/evalua_ludopatia/api/get_evaluaciones.php');
                 if (res.status===401) { this.loading=false; return; }
                 const d = await res.json(); this.stats=d.stats; this.data=d.evaluaciones; this.authorized=true;
             } catch(e) { console.error(e); }

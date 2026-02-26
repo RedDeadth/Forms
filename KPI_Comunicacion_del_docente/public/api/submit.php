@@ -1,6 +1,14 @@
 <?php
 require_once __DIR__ . '/db.php';
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: /'); exit; }
+
+// Base path para el proyecto
+$BASE_PATH = '/kpi_comunicacion';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { 
+    header('Location: ' . $BASE_PATH . '/'); 
+    exit; 
+}
+
 try {
     $stmt = $pdo->prepare("INSERT INTO evaluaciones (encuestado_nombre, institucion_educativa, tipo_gestion, fecha, pais, region, provincia, programa_estudios, cargo_institucion, anios_ensenando, profesion, score_total, nivel_docente, respuestas_json) VALUES (:encuestado_nombre, :institucion_educativa, :tipo_gestion, :fecha, :pais, :region, :provincia, :programa_estudios, :cargo_institucion, :anios_ensenando, :profesion, :score_total, :nivel_docente, :respuestas_json)");
     $stmt->execute([
@@ -19,5 +27,10 @@ try {
         ':nivel_docente' => $_POST['nivel_docente'] ?? '',
         ':respuestas_json' => $_POST['respuestas_json'] ?? '{}'
     ]);
-    header('Location: /gracias'); exit;
-} catch (Exception $e) { error_log('Error: ' . $e->getMessage()); header('Location: /encuesta?error=db'); exit; }
+    header('Location: ' . $BASE_PATH . '/gracias'); 
+    exit;
+} catch (Exception $e) { 
+    error_log('Error: ' . $e->getMessage()); 
+    header('Location: ' . $BASE_PATH . '/encuesta?error=db'); 
+    exit; 
+}

@@ -12,47 +12,43 @@ import Layout from '../../layouts/Layout.astro';
         <div x-show="!loading && authorized" x-cloak>
             <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
                 <div><h1 class="text-3xl font-extrabold text-emerald-700">Panel de Administrador</h1><p class="text-gray-500 mt-1">Resumen de evaluaciones KPI - Comunicación del Docente</p></div>
-                <a href="/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
+                <a href="/kpi_comunicacion/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
             </div>
             <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div class="bg-white rounded-2xl p-5 shadow-md border text-center"><p class="text-3xl font-black text-emerald-600" x-text="stats.total"></p><p class="text-xs text-gray-500 mt-1">Total Respuestas</p></div>
                 <div class="bg-white rounded-2xl p-5 shadow-md border text-center"><p class="text-3xl font-black text-green-600">✓</p><p class="text-xs text-gray-500 mt-1">Base de Datos Activa</p></div>
                 <div class="bg-white rounded-2xl p-5 shadow-md border text-center"><p class="text-3xl font-black text-blue-600">📋</p><p class="text-xs text-gray-500 mt-1">Encuestas Pendientes</p></div>
             </div>
-            <div class="max-w-7xl mx-auto mb-6"><input type="text" x-model="search" placeholder="Buscar por nombre del encuestado..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-emerald-200 outline-none"/></div>
+            <div class="max-w-7xl mx-auto mb-6"><input type="text" x-model="search" placeholder="Buscar por docente, institución, programa..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-emerald-200 outline-none"/></div>
             <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg border overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm whitespace-nowrap">
                         <thead class="bg-gray-50 border-b">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">N°</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Docente</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Institución</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Tipo Gestión</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">País</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Región</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Provincia</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Programa</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Cargo</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Años</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Profesión</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Puntaje</th>
                                 <th class="px-4 py-3 text-left font-semibold text-gray-600">Nivel Docente</th>
-                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha Reg.</th>
+                                <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha</th>
                             </tr>
                         </thead>
                         <tbody>
                             <template x-for="(r, i) in filtered()" :key="i">
                                 <tr class="border-b hover:bg-emerald-50 transition">
                                     <td class="px-4 py-3 text-gray-400" x-text="i+1"></td>
+                                    <td class="px-4 py-3 font-bold text-emerald-700" x-text="r.encuestado_nombre||'-'"></td>
                                     <td class="px-4 py-3 font-medium text-gray-800" x-text="r.institucion_educativa||'-'"></td>
                                     <td class="px-4 py-3 text-gray-600" x-text="r.tipo_gestion||'-'"></td>
                                     <td class="px-4 py-3 text-gray-600" x-text="r.pais||'-'"></td>
-                                    <td class="px-4 py-3 text-gray-600" x-text="r.region||'-'"></td>
-                                    <td class="px-4 py-3 text-gray-600" x-text="r.provincia||'-'"></td>
                                     <td class="px-4 py-3 text-gray-600" x-text="r.programa_estudios||'-'"></td>
                                     <td class="px-4 py-3 text-gray-600" x-text="r.cargo_institucion||'-'"></td>
                                     <td class="px-4 py-3 text-gray-600 text-center" x-text="r.anios_ensenando||'-'"></td>
-                                    <td class="px-4 py-3 text-gray-600" x-text="r.profesion||'-'"></td>
                                     <td class="px-4 py-3 font-bold text-emerald-600" x-text="r.score_total+'/105'"></td>
                                     <td class="px-4 py-3 text-xs font-semibold text-gray-700" x-text="r.nivel_docente||'-'"></td>
                                     <td class="px-4 py-3 text-gray-400 text-xs" x-text="r.created_at?new Date(r.created_at).toLocaleDateString('es'):'-'"></td>
@@ -75,13 +71,17 @@ window.dashboardData = function() {
         async init() {
             if (!document.cookie.includes('admin_auth=true')) { this.loading=false; return; }
             try {
-                const res = await fetch('/api/get_evaluaciones.php');
+                const res = await fetch('/kpi_comunicacion/api/get_evaluaciones.php');
                 if (res.status===401) { this.loading=false; return; }
                 const d = await res.json(); this.stats=d.stats; this.data=d.evaluaciones; this.authorized=true;
             } catch(e) { console.error(e); }
             this.loading=false;
         },
-        filtered() { if(!this.search) return this.data; const s=this.search.toLowerCase(); return this.data.filter(r=>`${r.encuestado_nombre||''}`.toLowerCase().includes(s)); }
+        filtered() { 
+            if(!this.search) return this.data; 
+            const s=this.search.toLowerCase(); 
+            return this.data.filter(r=>`${r.encuestado_nombre||''} ${r.institucion_educativa||''} ${r.programa_estudios||''}`.toLowerCase().includes(s)); 
+        }
     };
 };
 window.Alpine = Alpine; Alpine.start();

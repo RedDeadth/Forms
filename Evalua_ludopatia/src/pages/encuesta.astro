@@ -6,10 +6,10 @@ import Layout from '../layouts/Layout.astro';
 		<div class="flex justify-between items-center mb-10">
 			<h1 class="text-3xl font-extrabold text-purple-700 tracking-tight">Evaluación de Ludopatía</h1>
 			<span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido</span>
-			<a href="/api/logout.php" class="text-white bg-red-500 px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
+			<a href="/evalua_ludopatia/api/logout.php" class="text-white bg-red-500 px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
 		</div>
 		
-		<form id="ludopatia-form" action="/api/submit.php" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
+		<form id="ludopatia-form" action="/evalua_ludopatia/api/submit.php" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
 			<input type="hidden" name="evaluador_nombre" :value="userName" />
 
 			<!-- ===== SECTION 1: Evaluador ===== -->
