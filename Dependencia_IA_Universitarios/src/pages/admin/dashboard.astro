@@ -8,7 +8,7 @@ import Layout from '../../layouts/Layout.astro';
         <!-- Loading -->
         <div x-show="loading" class="flex items-center justify-center min-h-[50vh]">
             <div class="text-center">
-                <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <div class="w-12 h-12 border-4 border-cyan-200 border-t-cyan-600 rounded-full animate-spin mx-auto mb-4"></div>
                 <p class="text-gray-500 font-medium">Cargando datos...</p>
             </div>
         </div>
@@ -18,7 +18,7 @@ import Layout from '../../layouts/Layout.astro';
             <div class="text-center bg-white p-10 rounded-3xl shadow-xl border">
                 <p class="text-xl font-bold text-red-600 mb-4">⚠️ No autorizado</p>
                 <p class="text-gray-500 mb-6">Debe iniciar sesión como administrador.</p>
-                <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition">Ir al inicio</a>
+                <a href="/dependencia_ia/" class="bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-cyan-700 transition">Ir al inicio</a>
             </div>
         </div>
 
@@ -26,7 +26,7 @@ import Layout from '../../layouts/Layout.astro';
         <div x-show="!loading && authorized" x-cloak>
             <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
                 <div>
-                    <h1 class="text-3xl font-extrabold text-blue-700">Panel de Administrador</h1>
+                    <h1 class="text-3xl font-extrabold text-cyan-700">Panel de Administrador</h1>
                     <p class="text-gray-500 mt-1">Resumen de Encuestas: Dependencia IA Universitarios</p>
                 </div>
                 <a href="/dependencia_ia/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
@@ -35,7 +35,7 @@ import Layout from '../../layouts/Layout.astro';
             <!-- Stats -->
             <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-7 gap-3 mb-8">
                 <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
-                    <p class="text-3xl font-black text-blue-600" x-text="stats.total"></p>
+                    <p class="text-3xl font-black text-cyan-600" x-text="stats.total"></p>
                     <p class="text-xs text-gray-500 mt-1">Total</p>
                 </div>
                 <div class="bg-white rounded-2xl p-4 shadow-md border text-center">
@@ -66,7 +66,7 @@ import Layout from '../../layouts/Layout.astro';
 
             <!-- Search -->
             <div class="max-w-7xl mx-auto mb-6">
-                <input type="text" x-model="search" placeholder="Buscar por nombres, universidad, programa o país..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-blue-200 outline-none"/>
+                <input type="text" x-model="search" placeholder="Buscar por nombres, universidad, programa o país..." class="w-full md:w-96 border border-gray-300 rounded-xl px-4 py-2 shadow-sm focus:ring focus:ring-cyan-200 outline-none"/>
             </div>
 
             <!-- Table -->
@@ -93,7 +93,7 @@ import Layout from '../../layouts/Layout.astro';
                                 <tr>
                                     <td colspan="11" class="p-0">
                                         <!-- Main Row -->
-                                        <div class="flex items-center border-b hover:bg-blue-50 transition cursor-pointer px-0"
+                                        <div class="flex items-center border-b hover:bg-cyan-50 transition cursor-pointer px-0"
                                              @click="expandedRow = expandedRow===i ? null : i">
                                             <div class="px-3 py-3 text-gray-400 w-[40px]" x-text="i+1"></div>
                                             <div class="px-3 py-3 font-medium text-gray-800 flex-1 min-w-[150px]" x-text="(r.nombres||'')+' '+(r.apellidos||'-')"></div>
@@ -107,18 +107,18 @@ import Layout from '../../layouts/Layout.astro';
                                                 <span class="px-2 py-1 rounded-lg text-xs font-bold" :class="getLevelClass(r.nivel_dependencia)" x-text="r.nivel_dependencia"></span>
                                             </div>
                                             <div class="px-3 py-3 text-gray-400 text-xs w-[90px]" x-text="r.created_at ? new Date(r.created_at).toLocaleDateString('es') : '-'"></div>
-                                            <div class="px-3 py-3 text-center text-blue-500 w-[50px]">
+                                            <div class="px-3 py-3 text-center text-cyan-500 w-[50px]">
                                                 <span x-text="expandedRow===i?'▲':'▼'"></span>
                                             </div>
                                         </div>
                                         <!-- Expanded Detail -->
-                                        <div x-show="expandedRow===i" x-transition class="bg-indigo-50/50 px-6 py-5 border-b">
+                                        <div x-show="expandedRow===i" x-transition class="bg-cyan-50/50 px-6 py-5 border-b">
                                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Cognitiva</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_cognitiva+'/35'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sobreconfianza</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_sobreconfianza+'/35'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sustitución</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_sustitucion+'/35'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Compulsivo</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_compulsivo+'/28'"></p></div>
-                                                <div class="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Ético</p><p class="font-bold text-blue-900 text-lg" x-text="r.score_etico+'/28'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-cyan-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Cognitiva</p><p class="font-bold text-cyan-900 text-lg" x-text="r.score_cognitiva+'/35'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-cyan-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sobreconfianza</p><p class="font-bold text-cyan-900 text-lg" x-text="r.score_sobreconfianza+'/35'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-cyan-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Sustitución</p><p class="font-bold text-cyan-900 text-lg" x-text="r.score_sustitucion+'/35'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-cyan-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Compulsivo</p><p class="font-bold text-cyan-900 text-lg" x-text="r.score_compulsivo+'/28'"></p></div>
+                                                <div class="bg-white p-3 rounded-xl border border-cyan-100 shadow-sm"><p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Ético</p><p class="font-bold text-cyan-900 text-lg" x-text="r.score_etico+'/28'"></p></div>
                                             </div>
                                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
                                                 <div class="bg-white p-3 rounded-xl border border-gray-100"><p class="text-xs text-gray-400">Región / Prov.</p><p class="font-medium text-gray-700" x-text="(r.region||'-')+' / '+(r.provincia||'-')"></p></div>

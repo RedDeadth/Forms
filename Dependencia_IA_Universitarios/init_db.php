@@ -61,7 +61,18 @@ try {
         )
     ");
 
-    echo "✅ Base de datos '$dbName' y tabla 'evaluaciones_ia' creadas exitosamente.\n";
+    // Crear tabla de usuarios
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nombre VARCHAR(200) NOT NULL,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ");
+
+    echo "✅ Base de datos '$dbName' y tablas 'evaluaciones_ia' + 'usuarios' creadas exitosamente.\n";
 
 } catch (PDOException $e) {
     echo "❌ Error: " . $e->getMessage() . "\n";
