@@ -7,7 +7,7 @@ import Layout from '../../layouts/Layout.astro';
             <div class="text-center"><div class="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4"></div><p class="text-gray-500 font-medium">Cargando datos...</p></div>
         </div>
         <div x-show="!loading && !authorized" class="flex items-center justify-center min-h-[50vh]">
-            <div class="text-center bg-white p-10 rounded-3xl shadow-xl border"><p class="text-xl font-bold text-red-600 mb-4">⚠️ No autorizado</p><a href="/" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition">Ir al inicio</a></div>
+            <div class="text-center bg-white p-10 rounded-3xl shadow-xl border"><p class="text-xl font-bold text-red-600 mb-4">⚠️ No autorizado</p><a href="/kpi_comunicacion/" class="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition">Ir al inicio</a></div>
         </div>
         <div x-show="!loading && authorized" x-cloak>
             <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
