@@ -6,6 +6,7 @@ try {
     $pdo->exec("USE `$dbName`");
     $pdo->exec("CREATE TABLE IF NOT EXISTS inspecciones (
         id INT AUTO_INCREMENT PRIMARY KEY, inspector_nombre VARCHAR(150),
+        inspector_email VARCHAR(255),
         tipo_vivienda VARCHAR(100), plantas VARCHAR(10), zona_construccion VARCHAR(50),
         fecha VARCHAR(50), pais VARCHAR(100), region VARCHAR(100), provincia VARCHAR(100),
         grado_estudios VARCHAR(100),
@@ -13,5 +14,11 @@ try {
         score_humedad INT DEFAULT 0, score_estructural INT DEFAULT 0, score_salud INT DEFAULT 0,
         score_infantil INT DEFAULT 0, score_total INT DEFAULT 0, nivel_riesgo VARCHAR(50),
         respuestas_json JSON, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-    echo "✅ viviendas_db creada exitosamente.\n";
+    $pdo->exec("CREATE TABLE IF NOT EXISTS usuarios (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(150) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+    echo "✅ viviendas_db creada exitosamente (tablas: inspecciones + usuarios).\n";
 } catch (PDOException $e) { echo "❌ Error: " . $e->getMessage() . "\n"; exit(1); }

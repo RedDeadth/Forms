@@ -5,17 +5,29 @@ import '../styles/global.css';
 <html lang="es">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Evaluación de KPIs</title>
+		<meta name="description" content="Herramienta de evaluación de riesgos en el entorno doméstico" />
+		<title>Autoevaluación - Riesgos en Casa</title>
 	</head>
-	<body class="grid-bg text-gray-800 antialiased min-h-screen">
+	<body class="font-inter text-gray-800 antialiased min-h-screen">
 		<slot />
 	</body>
 </html>
 
 <style is:global>
+	body {
+		font-family: 'Inter', system-ui, -apple-system, sans-serif;
+		margin: 0;
+		padding: 0;
+	}
+	.font-inter {
+		font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	}
 	.grid-bg {
 		background-color: #f8fafc;
 		background-image:

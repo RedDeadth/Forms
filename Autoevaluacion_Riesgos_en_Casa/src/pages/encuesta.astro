@@ -5,12 +5,13 @@ import Layout from '../layouts/Layout.astro';
 	<main class="max-w-4xl mx-auto py-10 px-6">
 		<div class="flex justify-between items-center mb-10">
 			<h1 class="text-3xl font-extrabold text-blue-700 tracking-tight">Encuesta sobre la vivienda</h1>
-			<span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold">Bienvenido</span>
-			<a href="/api/logout.php" class="text-white bg-red-500 px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
+			<span class="text-gray-600 bg-gray-100 px-4 py-2 rounded-full text-sm font-semibold" id="welcome-name">Bienvenido</span>
+			<a href="/encuesta_riesgos/api/logout.php" class="text-white bg-red-500 px-4 py-2 rounded-full text-sm font-semibold">Cerrar Sesión</a>
 		</div>
 		
-		<form id="inspection-form" action="/api/submit.php" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
+		<form id="inspection-form" action="/encuesta_riesgos/api/submit.php" method="POST" class="bg-white shadow-2xl rounded-3xl p-8 border border-gray-100" x-data="formData()" @submit.prevent="submitForm()">
 			<input type="hidden" name="inspector_nombre" :value="userName" />
+			<input type="hidden" name="inspector_email" :value="userEmail" />
 
 			<!-- ===== SECTION 1: Registro ===== -->
 			<div class="mb-10 border-b pb-8">
@@ -165,6 +166,7 @@ import Alpine from 'alpinejs';
 window.formData = function() {
 	return {
 userName: decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('user_name='))?.split('=')[1] || ''),
+userEmail: decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('user_email='))?.split('=')[1] || ''),
 
 		// Section 1
 		tipoVivienda:'', tipoViviendaLabel:'Seleccione...',
@@ -235,6 +237,11 @@ userName: decodeURIComponent(document.cookie.split('; ').find(row => row.startsW
 
 window.Alpine = Alpine;
 Alpine.start();
+
+// Set welcome name
+const nameFromCookie = decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('user_name='))?.split('=')[1] || '');
+const welcomeEl = document.getElementById('welcome-name');
+if (welcomeEl && nameFromCookie) welcomeEl.textContent = `Hola, ${nameFromCookie}`;
 </script>
 
 <style>

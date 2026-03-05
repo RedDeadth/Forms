@@ -15,6 +15,7 @@ async function init() {
             CREATE TABLE IF NOT EXISTS inspecciones (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 inspector_nombre VARCHAR(150),
+                inspector_email VARCHAR(255),
                 
                 tipo_vivienda VARCHAR(100),
                 plantas VARCHAR(10),
@@ -39,7 +40,18 @@ async function init() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log('Database and inspecciones table initialized successfully.');
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(150) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        console.log('Database and tables (inspecciones + usuarios) initialized successfully.');
     } catch (error) {
         console.error('Failed to init DB:', error);
     } finally {

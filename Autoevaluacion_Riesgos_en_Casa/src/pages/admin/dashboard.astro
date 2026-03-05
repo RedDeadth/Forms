@@ -12,7 +12,7 @@ import Layout from '../../layouts/Layout.astro';
         <div x-show="!loading && authorized" x-cloak>
             <div class="max-w-7xl mx-auto mb-8 flex justify-between items-end">
                 <div><h1 class="text-3xl font-extrabold text-blue-700">Panel de Administrador</h1><p class="text-gray-500 mt-1">Resumen de inspecciones y evaluaciones de riesgo</p></div>
-                <a href="/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
+                <a href="/encuesta_riesgos/api/logout.php" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-red-600 transition text-sm">Cerrar Sesión</a>
             </div>
             <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
                 <div class="bg-white rounded-2xl p-5 shadow-md border text-center"><p class="text-3xl font-black text-blue-600" x-text="stats.total"></p><p class="text-xs text-gray-500 mt-1">Total</p></div>
@@ -30,6 +30,7 @@ import Layout from '../../layouts/Layout.astro';
                             <tr>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600">#</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600">Inspector</th>
+                                <th class="px-3 py-3 text-left font-semibold text-gray-600">Email</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600">Tipo</th>
                                 <th class="px-3 py-3 text-center font-semibold text-gray-600">Plantas</th>
                                 <th class="px-3 py-3 text-left font-semibold text-gray-600">Zona</th>
@@ -48,6 +49,7 @@ import Layout from '../../layouts/Layout.astro';
                                         <div class="flex items-center border-b hover:bg-blue-50 transition cursor-pointer" @click="exp = exp===i ? null : i">
                                             <div class="px-3 py-3 text-gray-400 w-[40px]" x-text="i+1"></div>
                                             <div class="px-3 py-3 font-medium flex-1" x-text="r.inspector_nombre||'-'"></div>
+                                            <div class="px-3 py-3 text-gray-500 text-xs flex-1" x-text="r.inspector_email||'-'"></div>
                                             <div class="px-3 py-3 flex-1" x-text="r.tipo_vivienda||'-'"></div>
                                             <div class="px-3 py-3 text-center w-[60px]" x-text="r.plantas||'-'"></div>
                                             <div class="px-3 py-3 w-[80px]" x-text="r.zona_construccion||'-'"></div>
@@ -91,7 +93,7 @@ window.dashboardData = function() {
         async init() {
             if (!document.cookie.includes('admin_auth=true')) { this.loading=false; return; }
             try {
-                const res = await fetch('/api/get_inspecciones.php');
+                const res = await fetch('/encuesta_riesgos/api/get_inspecciones.php');
                 if (res.status===401) { this.loading=false; return; }
                 const d = await res.json(); this.stats=d.stats; this.data=d.inspecciones; this.authorized=true;
             } catch(e) { console.error(e); }

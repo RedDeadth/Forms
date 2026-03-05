@@ -1,10 +1,12 @@
 <?php
 require_once __DIR__ . '/db.php';
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: /'); exit; }
+$BASE = '/encuesta_riesgos';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header("Location: $BASE/"); exit; }
 try {
-    $stmt = $pdo->prepare("INSERT INTO inspecciones (inspector_nombre, tipo_vivienda, plantas, zona_construccion, fecha, pais, region, provincia, grado_estudios, score_electrico, score_incendio, score_caidas, score_humedad, score_estructural, score_salud, score_infantil, score_total, nivel_riesgo, respuestas_json) VALUES (:inspector_nombre, :tipo_vivienda, :plantas, :zona_construccion, :fecha, :pais, :region, :provincia, :grado_estudios, :score_electrico, :score_incendio, :score_caidas, :score_humedad, :score_estructural, :score_salud, :score_infantil, :score_total, :nivel_riesgo, :respuestas_json)");
+    $stmt = $pdo->prepare("INSERT INTO inspecciones (inspector_nombre, inspector_email, tipo_vivienda, plantas, zona_construccion, fecha, pais, region, provincia, grado_estudios, score_electrico, score_incendio, score_caidas, score_humedad, score_estructural, score_salud, score_infantil, score_total, nivel_riesgo, respuestas_json) VALUES (:inspector_nombre, :inspector_email, :tipo_vivienda, :plantas, :zona_construccion, :fecha, :pais, :region, :provincia, :grado_estudios, :score_electrico, :score_incendio, :score_caidas, :score_humedad, :score_estructural, :score_salud, :score_infantil, :score_total, :nivel_riesgo, :respuestas_json)");
     $stmt->execute([
         ':inspector_nombre' => $_POST['inspector_nombre'] ?? null,
+        ':inspector_email' => $_POST['inspector_email'] ?? null,
         ':tipo_vivienda' => $_POST['tipo_vivienda'] ?? null,
         ':plantas' => $_POST['plantas'] ?? null,
         ':zona_construccion' => $_POST['zona_construccion'] ?? null,
@@ -24,8 +26,8 @@ try {
         ':nivel_riesgo' => $_POST['nivel_riesgo'] ?? null,
         ':respuestas_json' => $_POST['respuestas_json'] ?? '{}'
     ]);
-    header('Location: /gracias'); exit;
+    header("Location: $BASE/gracias"); exit;
 } catch (Exception $e) {
     error_log('Error in DB Submission: ' . $e->getMessage());
-    header('Location: /encuesta?error=db'); exit;
+    header("Location: $BASE/encuesta?error=db"); exit;
 }
